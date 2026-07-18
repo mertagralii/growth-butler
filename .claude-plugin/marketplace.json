@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "seo-butler-marketplace",
+  "description": "Marketplace hosting the seo-butler plugin.",
+  "owner": {
+    "name": "Mert Ağralı",
+    "email": "mmertagrali@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "seo-butler",
+      "version": "2.0.0",
+      "description": "An expert SEO & GEO agency for developers: reads your project, does the technical SEO work behind an approval gate with git-aware rollback, and verifies it on the deployed site. GEO first-class — get cited by ChatGPT, Claude and Perplexity, not just ranked by Google.",
+      "author": {
+        "name": "Mert Ağralı"
+      },
+      "category": "productivity",
+      "source": "./"
+    }
+  ]
+}

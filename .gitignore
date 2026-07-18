@@ -1,0 +1,12 @@
+# Local Claude Code settings (not part of the plugin)
+.claude/
+
+# Private field-test reports (contain live domains, IDs, site findings) — keep local
+SEO-BUTLER-TEST-RAPORU.md
+*-TEST-RAPORU.md
+
+# OS / editor cruft
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.swp

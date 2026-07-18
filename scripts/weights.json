@@ -1,0 +1,133 @@
+{
+  "$comment": "Single source of truth for score-card weights. scorecard.md documents the grouping; this file is what score.mjs actually computes from. Every key here must exist in checklist.md and in state.json's `items`. Weights are RELATIVE — the total is not 100 and is not meant to be; score.mjs renormalizes over the items that actually apply to the site (n/a items leave the denominator). Adding an item therefore lowers every other item's share slightly instead of inflating the total.",
+  "version": 2,
+  "groups": {
+    "titles_meta": {
+      "label": "Titles + meta descriptions",
+      "weight": 9,
+      "items": { "titles": 4.5, "meta_description": 4.5 }
+    },
+    "robots_sitemap": {
+      "label": "robots.txt + sitemap.xml",
+      "weight": 8,
+      "items": { "robots_txt": 4, "sitemap_xml": 4 }
+    },
+    "canonical_hygiene": {
+      "label": "Canonical / robots hygiene",
+      "weight": 6,
+      "items": { "canonical": 3, "robots_hygiene": 3 }
+    },
+    "structured_data": {
+      "label": "Structured data (JSON-LD)",
+      "weight": 9,
+      "items": { "structured_data": 9 }
+    },
+    "social_cards": {
+      "label": "Open Graph + Twitter",
+      "weight": 5,
+      "items": { "open_graph": 2.5, "twitter_card": 2.5 }
+    },
+    "broken_links": {
+      "label": "Broken links (internal integrity)",
+      "weight": 3,
+      "items": { "broken_links": 3 }
+    },
+    "edge_robots": {
+      "label": "Edge/CDN robots override",
+      "weight": 5,
+      "note": "When it bites, it overrides everything else.",
+      "items": { "edge_robots_check": 5 }
+    },
+    "canonical_consistency": {
+      "label": "Canonical <-> internal-link consistency",
+      "weight": 3,
+      "items": { "canonical_link_consistency": 3 }
+    },
+    "stale_files": {
+      "label": "Stale/orphan public files",
+      "weight": 2,
+      "items": { "stale_public_files": 2 }
+    },
+    "keyword_targeting": {
+      "label": "On-page: keyword / topic targeting",
+      "weight": 5,
+      "items": { "keyword_optimization": 5 }
+    },
+    "internal_linking": {
+      "label": "On-page: internal linking",
+      "weight": 4,
+      "items": { "internal_linking": 4 }
+    },
+    "content_authenticity": {
+      "label": "Content authenticity",
+      "weight": 3,
+      "items": { "content_authenticity": 3 }
+    },
+    "geo_crawlability": {
+      "label": "GEO: AI crawlability",
+      "weight": 8,
+      "note": "geo.md Tier 1 - highest impact.",
+      "items": { "ai_crawlability": 8 }
+    },
+    "geo_structure": {
+      "label": "GEO: answer-first structure + semantic HTML + AI readiness",
+      "weight": 7,
+      "note": "geo.md Tier 2. Answer-first carries most of the group.",
+      "items": { "answer_first": 3, "semantic_html": 2, "ai_readiness": 2 }
+    },
+    "geo_llms_txt": {
+      "label": "GEO: llms.txt",
+      "weight": 2,
+      "note": "geo.md Tier 6 - deliberately low. No major AI engine officially consumes it as of 2026.",
+      "items": { "llms_txt": 2 }
+    },
+    "content_suggestions": {
+      "label": "Content suggestions (evidence/freshness)",
+      "weight": 2,
+      "items": { "content_suggestions": 2 }
+    },
+    "accessibility": {
+      "label": "Image alt / accessibility",
+      "weight": 4,
+      "items": { "image_alt": 2, "link_text": 1, "html_lang": 1 }
+    },
+    "performance": {
+      "label": "Core Web Vitals / performance",
+      "weight": 8,
+      "items": { "core_web_vitals": 4, "image_optimization": 2, "render_blocking": 2 }
+    },
+    "search_console": {
+      "label": "Search Console",
+      "weight": 4,
+      "items": { "search_console": 4 }
+    },
+    "analytics": {
+      "label": "Analytics (GA4)",
+      "weight": 3,
+      "items": { "analytics_ga4": 3 }
+    },
+    "eeat_authorship": {
+      "label": "E-E-A-T: authorship + author schema",
+      "weight": 4,
+      "items": { "eeat_authorship": 4 }
+    },
+    "eeat_trust": {
+      "label": "E-E-A-T: trust & identity",
+      "weight": 2,
+      "items": { "trust_identity": 2 }
+    },
+    "head_hygiene": {
+      "label": "URL quality, hreflang, favicon/manifest",
+      "weight": 5,
+      "note": "Added in v2. These three checklist items were audited but carried no weight before, so the score silently ignored them. hreflang is n/a on single-language sites and drops out of the denominator there.",
+      "items": { "url_quality": 2, "hreflang": 2, "favicon_manifest": 1 }
+    }
+  },
+  "statusCredit": {
+    "done": 1,
+    "partial": 0.5,
+    "skipped": 0,
+    "todo": 0,
+    "n/a": null
+  }
+}

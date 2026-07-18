@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--user-data-dir",
+        "${HOME}/.seo-butler/chrome-profile"
+      ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "openseo": {
+      "type": "http",
+      "url": "https://app.openseo.so/mcp"
+    }
+  }
+}
