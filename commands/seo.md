@@ -57,7 +57,9 @@ Report. Two points are yours to enforce as the orchestrator:
 
 - **The plan gate.** Build and present the plan per `plan.md` (impact-ranked, led by a Top 3 wins
   block, split into code side and dashboard side). Touch no file until the user approves. If they
-  edit it, adjust and re-show.
+  edit it, adjust and re-show. **The Optional block — 🔍 Strategy and 📍 Local SEO — is printed on
+  every plan without exception**, even a near-perfect re-run; when an option isn't worth taking, show
+  the line with the reason rather than dropping it. An option the user never sees isn't optional.
 - **Verification is yours, once, at the end.** Specialists never run builds. After applying, run the
   project's own checks (build/typecheck/lint) **and** the deterministic validators:
 

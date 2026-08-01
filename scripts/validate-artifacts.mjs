@@ -242,12 +242,38 @@ function makeReporter () {
 
 // ---------------------------------------------------------------- checks
 
-function checkRobots (add, source, robots) {
+/**
+ * Not finding a file in the public dir is NOT proof the artifact is missing. ASP.NET, Django,
+ * Rails, Laravel and Spring routinely serve robots.txt and sitemap.xml from a *route* — there is
+ * no static file to find, and the site is perfectly correct. Only the live response settles it,
+ * so a repo-only run reports uncertainty instead of inventing a failure.
+ */
+function missingInRepo (add, id, item, checklist, name, live) {
+  if (live && live.ok) {
+    add(id, item, checklist, 'pass',
+      `No static ${name} in the public dir, but the live site serves it — generated dynamically by ` +
+      'a route. Correct for server-rendered stacks.')
+  } else if (live) {
+    add(id, item, checklist, 'fail',
+      `No ${name} in the public dir, and the live site doesn't serve one either ` +
+      `(HTTP ${live.status}). Genuinely missing.`)
+  } else {
+    add(id, item, checklist, 'skip',
+      `No static ${name} in the public dir. Not a failure on its own — many stacks generate it from ` +
+      'a route. Re-run with --url to settle it.')
+  }
+}
+
+function checkRobots (add, source, robots, live) {
   const label = source === 'live' ? 'live' : 'repo'
 
   if (!robots.ok) {
-    add(`robots.${source}.present`, 'robots_txt', 1, 'fail',
-      `No robots.txt (${label}, HTTP ${robots.status}). Crawlers get no sitemap pointer.`)
+    if (source === 'repo') {
+      missingInRepo(add, `robots.${source}.present`, 'robots_txt', 1, 'robots.txt', live)
+    } else {
+      add(`robots.${source}.present`, 'robots_txt', 1, 'fail',
+        `No robots.txt (${label}, HTTP ${robots.status}). Crawlers get no sitemap pointer.`)
+    }
     return null
   }
   add(`robots.${source}.present`, 'robots_txt', 1, 'pass', `robots.txt found (${label}).`)
@@ -292,12 +318,16 @@ function checkRobots (add, source, robots) {
   return parsed
 }
 
-function checkSitemap (add, source, sitemap) {
+function checkSitemap (add, source, sitemap, live) {
   const label = source === 'live' ? 'live' : 'repo'
 
   if (!sitemap.ok) {
-    add(`sitemap.${source}.present`, 'sitemap_xml', 2, 'fail',
-      `No sitemap.xml (${label}, HTTP ${sitemap.status}).`)
+    if (source === 'repo') {
+      missingInRepo(add, `sitemap.${source}.present`, 'sitemap_xml', 2, 'sitemap.xml', live)
+    } else {
+      add(`sitemap.${source}.present`, 'sitemap_xml', 2, 'fail',
+        `No sitemap.xml (${label}, HTTP ${sitemap.status}).`)
+    }
     return
   }
   add(`sitemap.${source}.present`, 'sitemap_xml', 2, 'pass', `sitemap.xml found (${label}).`)
@@ -508,36 +538,51 @@ function checkPage (add, page, res) {
 async function run (args) {
   const { add, checks } = makeReporter()
 
-  let repoRobots = null
-  let liveRobots = null
+  // Fetch both sides BEFORE judging either. A repo artifact that looks missing may simply be
+  // served from a route, and only the live response can tell the difference — so the repo verdict
+  // has to know the live result before it is written.
+  const repo = { robots: null, sitemap: null, llms: null }
+  const live = { robots: null, sitemap: null, llms: null }
+  let origin = null
 
   if (args.root) {
     const root = resolve(process.cwd(), args.root)
     const publicDir = detectPublicDir(root, args.public)
     add('source.repo', null, null, 'info', `Repo public dir: ${publicDir}`)
-
-    repoRobots = readLocal(join(publicDir, 'robots.txt'))
-    checkRobots(add, 'repo', repoRobots)
-    checkSitemap(add, 'repo', readLocal(join(publicDir, 'sitemap.xml')))
-
-    const llms = readLocal(join(publicDir, 'llms.txt'))
-    add('llms.repo', 'llms_txt', 22, llms.ok ? 'pass' : 'warn',
-      llms.ok
-        ? 'llms.txt present.'
-        : 'No llms.txt. Cheap to add, but genuinely minor - no major AI engine officially consumes it as of 2026.')
+    repo.robots = readLocal(join(publicDir, 'robots.txt'))
+    repo.sitemap = readLocal(join(publicDir, 'sitemap.xml'))
+    repo.llms = readLocal(join(publicDir, 'llms.txt'))
   }
 
   if (args.url) {
-    const origin = args.url.replace(/\/+$/, '')
+    origin = args.url.replace(/\/+$/, '')
     add('source.live', null, null, 'info', `Live origin: ${origin}`)
+    live.robots = await fetchRaw(`${origin}/robots.txt`)
+    live.sitemap = await fetchRaw(`${origin}/sitemap.xml`)
+    live.llms = await fetchRaw(`${origin}/llms.txt`)
+  }
 
-    liveRobots = await fetchRaw(`${origin}/robots.txt`)
-    checkRobots(add, 'live', liveRobots)
-    checkSitemap(add, 'live', await fetchRaw(`${origin}/sitemap.xml`))
+  if (args.root) {
+    checkRobots(add, 'repo', repo.robots, live.robots)
+    checkSitemap(add, 'repo', repo.sitemap, live.sitemap)
 
-    const llms = await fetchRaw(`${origin}/llms.txt`)
-    add('llms.live', 'llms_txt', 22, llms.ok ? 'pass' : 'warn',
-      llms.ok ? 'llms.txt served.' : `No llms.txt (HTTP ${llms.status}).`)
+    if (repo.llms.ok) {
+      add('llms.repo', 'llms_txt', 22, 'pass', 'llms.txt present.')
+    } else if (live.llms && live.llms.ok) {
+      add('llms.repo', 'llms_txt', 22, 'pass',
+        'No static llms.txt, but the live site serves it — generated dynamically by a route.')
+    } else {
+      add('llms.repo', 'llms_txt', 22, 'warn',
+        'No llms.txt. Cheap to add, but genuinely minor - no major AI engine officially consumes it as of 2026.')
+    }
+  }
+
+  if (args.url) {
+    checkRobots(add, 'live', live.robots, null)
+    checkSitemap(add, 'live', live.sitemap, null)
+
+    add('llms.live', 'llms_txt', 22, live.llms.ok ? 'pass' : 'warn',
+      live.llms.ok ? 'llms.txt served.' : `No llms.txt (HTTP ${live.llms.status}).`)
 
     for (const page of args.pages) {
       const path = page.startsWith('/') ? page : `/${page}`
@@ -546,13 +591,16 @@ async function run (args) {
   }
 
   // Edge/CDN override: the repo says one thing, the edge serves another.
-  if (repoRobots && liveRobots) {
-    if (!repoRobots.ok || !liveRobots.ok) {
+  if (repo.robots && live.robots) {
+    if (!repo.robots.ok || !live.robots.ok) {
       add('robots.edge-diff', 'edge_robots_check', 14, 'skip',
-        'Cannot compare robots.txt - one side is missing.')
+        !repo.robots.ok && live.robots.ok
+          ? 'No static robots.txt to diff against — it is generated by a route, so an edge override ' +
+            'cannot be detected by comparing files. Compare the live output against the route by hand.'
+          : 'Cannot compare robots.txt - one side is missing.')
     } else {
       const norm = t => stripBom(t).split(/\r?\n/).map(l => l.trim()).filter(Boolean).join('\n')
-      if (norm(repoRobots.text) === norm(liveRobots.text)) {
+      if (norm(repo.robots.text) === norm(live.robots.text)) {
         add('robots.edge-diff', 'edge_robots_check', 14, 'pass', 'Live robots.txt matches the repo - no edge override.')
       } else {
         add('robots.edge-diff', 'edge_robots_check', 14, 'fail',

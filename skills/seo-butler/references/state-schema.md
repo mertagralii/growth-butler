@@ -11,6 +11,13 @@ work and re-asking what it already learned. Read it first; keep it current.
 many people would rather not commit. If the user prefers to track it (the history is genuinely useful
 in a team repo), that's their call — ask once, record the answer, don't ask again.
 
+**Everything the butler writes goes under `.seo-butler/`** — screenshots, exports, downloaded CSVs,
+scratch files, reports. The user's project root is theirs; leaving files there is rude and they end
+up in `git status` as noise the user has to triage. Use `.seo-butler/tmp/` for anything transient and
+delete it when the run ends. If a tool insists on writing to the working directory anyway (the
+Playwright MCP creates its own `.playwright-mcp/` for snapshots and screenshots), **say so at the end
+of the run and offer to add it to `.gitignore`** rather than leaving the user to discover it.
+
 **Migration from v1.x:** if `./.growth-butler/state.json` exists (from the growth-butler era), read it
 as the baseline and write forward to `.seo-butler/`, then tell the user the old folder can be deleted.
 If **both** `.growth-butler/` and an older `.seo-butler/` exist, `.growth-butler/` is the newer one —

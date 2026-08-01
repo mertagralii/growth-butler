@@ -82,7 +82,8 @@ maddeleri paydadan düşürür ve kalanı 100'e normalize eder — elde yapılan
 |---|---|---|
 | **Node 18+** | ✅ Zorunlu | `scripts/` için. Ek bağımlılık yok. |
 | **Playwright MCP** | Önerilir | Render edilmiş DOM, OG görsel üretimi, dashboard adımları. Pakette geliyor. |
-| **Google hesabı** | Search Console/GA4 için | **Bir kez** kalıcı profilde giriş yaparsın; şifren bize hiç gelmez. |
+| **Google hesabı** | Search Console/GA4 için | Şifren bize hiç gelmez. Tarayıcıdan otomatikleştirmek istersen **Claude-in-Chrome** gerekir (kendi oturum açmış Chrome'un); yoksa butler kod tarafını yapar ve sana tıklama tıklama yol tarifi verir. |
+| **PSI API anahtarı** | Opsiyonel, ücretsiz | Anahtarsız PageSpeed Insights'ın günlük kotası var ve tekrarlı koşularda doluyor — Lighthouse ölçümünü düzenli istiyorsan ücretsiz bir anahtar al. |
 | **context7 MCP** | Opsiyonel | Framework'e özgü API'ları doğrulamak için. Pakette geliyor. |
 | **OpenSEO MCP** | Opsiyonel | Gerçek arama hacmi/zorluk verisi (~$10/ay). **Yoksa her şey anahtarsız çalışır** — nitel sinyaller, uydurma hacim yok. |
 
@@ -202,7 +203,8 @@ arithmetic.
 |---|---|---|
 | **Node 18+** | ✅ Required | For `scripts/`. No other dependencies. |
 | **Playwright MCP** | Recommended | Rendered DOM, OG image generation, dashboard steps. Bundled. |
-| **A Google account** | For Search Console/GA4 | You sign in **once** in a persistent profile; your password never reaches the plugin. |
+| **A Google account** | For Search Console/GA4 | Your password never reaches the plugin. To automate it in a browser you need **Claude-in-Chrome** (your own signed-in Chrome); without it the butler does the code side and hands you exact click-by-click steps. |
+| **A PSI API key** | Optional, free | Keyless PageSpeed Insights has a daily quota that repeat runs exhaust — get a free key if you want Lighthouse measured regularly. |
 | **context7 MCP** | Optional | Confirms framework-specific APIs. Bundled. |
 | **OpenSEO MCP** | Optional | Real search volume/difficulty (~$10/mo). **Without it everything runs keyless** — qualitative signals, no invented volumes. |
 

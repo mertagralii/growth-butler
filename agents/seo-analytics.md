@@ -45,13 +45,15 @@ Google steps need a session that is **already signed in**. Work down this list a
 that works:
 
 1. **Claude's in-Chrome tools** (`mcp__claude-in-chrome__*`), if present — this is the user's real
-   Chrome with their real Google session. Best outcome by far.
-2. **The bundled Playwright MCP.** It runs with a persistent profile (`--user-data-dir`), so a
-   session survives between runs — but **only after the user has signed in there once.** On a fresh
-   profile you will land on a Google login wall. That is expected, not a failure to hide: open the
-   login page, tell the user to sign in in that window, and continue once they confirm.
+   Chrome with their real Google session. **This is the only path that reliably reaches a signed-in
+   Google account**, so try it first and say plainly when you got it.
+2. **The bundled Playwright MCP — expect a login wall.** It starts from a **fresh temporary profile
+   every run**; nothing is remembered between runs. You can still drive it, but the user has to sign
+   in *inside that window* each time, which is usually more friction than doing it themselves. Use it
+   for Google steps only when the user explicitly wants to, and never pretend the session persisted.
 3. **Neither available** → do the code side, mark the dashboard items `partial`, and output the exact
-   click-by-click steps for the user.
+   click-by-click steps for the user. For a one-off dashboard task this is often the *fastest* honest
+   outcome, not a consolation prize — say so rather than apologising.
 
 Never treat a login wall as "done". Never ask for, type, or store the user's password — Google blocks
 automated logins and the user signs in themselves. If you open tabs, say what you opened and what to

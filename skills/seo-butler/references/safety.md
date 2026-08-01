@@ -33,6 +33,12 @@ Run this check after the plan is approved, before touching any file:
   applied **after the user approves them in the plan** — never silently. Never fabricate facts/stats/
   reviews, and never write new articles/content from scratch.
 - Match the project's conventions: indentation, quote style, framework idioms.
+- **Don't litter the project root.** Every file the butler creates for its own purposes — screenshots,
+  CSV exports, scratch output, reports — belongs under `.seo-butler/` (transient work in
+  `.seo-butler/tmp/`, cleaned up at the end). Files dropped in the root show up in the user's
+  `git status` as noise they have to triage. When a bundled tool writes to the working directory on
+  its own (e.g. Playwright MCP's `.playwright-mcp/`), name it in the final report and offer to
+  `.gitignore` it — don't leave the user to find it later.
 
 ## Who verifies (centralize it)
 **Apply specialists never run builds, tests, or the app.** Parallel agents building at the same time fight

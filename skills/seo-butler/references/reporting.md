@@ -34,9 +34,10 @@ landed — too early to read. Check back around <date>."* Never manufacture a tr
 1. **OpenSEO's Search Console connection** (`data-providers.md`) — read-only, **free, spends no
    credits**, API-based. Most robust, and works without a browser. Try this first whenever OpenSEO is
    connected, regardless of the user's `providerChoice` for keyword data.
-2. **The user's signed-in Search Console in a browser** — Claude's in-Chrome tools if present, else the
-   bundled Playwright's persistent profile. **Prefer the Performance page's CSV export button over
-   scraping the UI**: the export is a stable contract, the SPA's DOM is not. Download, then read the file.
+2. **The user's signed-in Search Console in a browser** — realistically this means Claude's in-Chrome
+   tools; the bundled Playwright starts from a fresh profile each run and won't be signed into Google.
+   **Prefer the Performance page's CSV export button over scraping the UI**: the export is a stable
+   contract, the SPA's DOM is not. Download, then read the file.
 3. **Neither available** → record it as skipped **with the reason** and report only what you *can*
    measure (PSI/CrUX per `measurement.md`). "Couldn't check" is never "fine".
 

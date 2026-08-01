@@ -46,8 +46,17 @@ Four scores: **Performance, SEO, Accessibility, Best Practices**. Two ways to ge
 ```
 https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=<encoded-url>&strategy=mobile
 ```
-- Works without an API key at low volume; if you get rate-limited (HTTP 429), say so and offer that the
-  user can supply a free key rather than silently giving up.
+- **Recommend a free API key up front, before the first call — don't wait to be refused.** The keyless
+  quota is per-day and small: in the field it was exhausted across two commands on the same day, so
+  Lighthouse never got measured at all. Keyless is fine for a one-off; **for anything repeated it is
+  unreliable and you should say so plainly** rather than letting the user discover it as a silent gap.
+  The key is free (Google Cloud Console → enable *PageSpeed Insights API* → create an API key) and
+  goes in the environment as `PAGESPEED_API_KEY`, appended as `&key=<key>`. **Never write it to
+  `state.json`, never print it, never commit it.**
+- If a call fails for quota or rate-limit reasons — HTTP 429, or a 403/400 whose body says
+  *"Quota exceeded … Queries per day"* — treat both the same way: **produce no score**, record the
+  reason in `measurements.unavailable`, and tell the user a free key removes the limit. Never
+  estimate a Lighthouse number to fill the hole.
 - Use `strategy=mobile` first — Google indexes mobile-first. Add `desktop` only if it's relevant.
 - Only works for **publicly reachable** URLs (no localhost, no auth walls).
 

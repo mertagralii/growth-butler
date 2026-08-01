@@ -40,6 +40,26 @@ Preserve the **body-copy boundary**: metadata is edited directly; substantive bo
 proposed here and applied only on approval (`safety.md`). Show an impact tag on each line so the
 ordering is visible.
 
+### The Optional block is MANDATORY — print it every single run
+
+This was dropped in the field and it silently cost the user a whole feature. On a run where the
+checklist was nearly complete, the plan was trimmed to just the code-side table, the strategy line
+never appeared, and the user — who *wanted* strategy — had no way to know it existed. **An opt-in
+feature the user is never told about is not opt-in; it's absent.**
+
+So: the Optional block is not conditional on having something to propose. Print it on every plan,
+including re-runs, including "everything is current" runs.
+
+- **🔍 Strategy** — always listed. If it isn't worth running now, still show the line with the reason:
+  *"🔍 Strategy — skipped (opt-in; nothing suggests you need keyword research yet)"*. Always carry the
+  money note: *free/keyless by default; I'll ask once whether you want real search volumes*.
+- **📍 Local SEO** — offered only for genuine local/physical businesses (unchanged). When it isn't
+  offered, say why in one line: *"📍 Local SEO — not applicable (no physical location)"*.
+
+The user must finish reading a plan knowing exactly what was **available** and not taken, not only
+what was proposed. Never silently drop an option because the model judged it unnecessary — that
+judgement belongs to the user.
+
 ## Shape (translate to the user's language)
 
 ```

@@ -2,11 +2,7 @@
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": [
-        "@playwright/mcp@latest",
-        "--user-data-dir",
-        "${HOME}/.seo-butler/chrome-profile"
-      ]
+      "args": ["@playwright/mcp@latest"]
     },
     "context7": {
       "command": "npx",
