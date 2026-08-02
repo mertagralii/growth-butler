@@ -4,8 +4,9 @@
   "private": true,
   "description": "Test harness for the seo-butler plugin's deterministic scripts. The plugin itself ships as markdown + dependency-free .mjs; this file exists only so `npm test` and CI have an entry point.",
   "scripts": {
-    "test": "node --test \"tests/**/*.test.mjs\""
+    "test": "node --test"
   },
+  "$testComment": "No glob argument on purpose: --test only understands glob patterns from Node 22 on, and the scripts under test support Node 18+. Bare `node --test` uses the built-in recursive discovery, which finds tests/**/*.test.mjs on every supported version.",
   "engines": {
     "node": ">=20"
   },
