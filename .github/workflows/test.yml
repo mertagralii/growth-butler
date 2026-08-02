@@ -1,0 +1,29 @@
+name: test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # The scripts run on whatever the user has. Windows is in the matrix because two of the bugs
+        # these tests guard against are Windows-shaped: the BOM PowerShell writes by default, and
+        # path handling in --root.
+        os: [ubuntu-latest, windows-latest]
+        node: [20, 22, 24]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # No install step on purpose: the plugin's scripts have zero dependencies and the test layer
+      # keeps it that way. If this ever needs `npm ci`, something has crept in.
+      - run: npm test

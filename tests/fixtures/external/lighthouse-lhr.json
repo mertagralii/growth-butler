@@ -1,0 +1,47 @@
+{
+  "$fixture": "Trimmed Lighthouse LHR. is-crawlable failing on a deliberately-noindex auth page is the measured false positive; structured-data is a manual audit Lighthouse never scores, and passing/unscored audits must not become work.",
+  "lhr": {
+    "finalDisplayedUrl": "https://example.com/giris",
+    "audits": {
+      "is-crawlable": {
+        "id": "is-crawlable",
+        "title": "Page is blocked from indexing",
+        "description": "Search engines are unable to include your pages in search results if they don't have permission to crawl them.",
+        "score": 0,
+        "scoreDisplayMode": "binary"
+      },
+      "image-alt": {
+        "id": "image-alt",
+        "title": "Image elements do not have [alt] attributes",
+        "description": "Informative elements should aim for short, descriptive alternate text.",
+        "score": 0,
+        "scoreDisplayMode": "binary"
+      },
+      "unsized-images": {
+        "id": "unsized-images",
+        "title": "Image elements do not have explicit width and height",
+        "score": 0.5,
+        "scoreDisplayMode": "binary",
+        "displayValue": "3 images"
+      },
+      "structured-data": {
+        "id": "structured-data",
+        "title": "Structured data is valid",
+        "score": null,
+        "scoreDisplayMode": "manual"
+      },
+      "document-title": {
+        "id": "document-title",
+        "title": "Document has a <title> element",
+        "score": 1,
+        "scoreDisplayMode": "binary"
+      },
+      "canonical": {
+        "id": "canonical",
+        "title": "Document has a valid rel=canonical",
+        "score": null,
+        "scoreDisplayMode": "notApplicable"
+      }
+    }
+  }
+}

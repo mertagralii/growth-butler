@@ -1,0 +1,18 @@
+{
+  "$fixture": "Shaped after a real geodaddy analyze_url payload. cont-json-ld, geo-listicle and tech-broken-links are the three disagreements that were reproduced against a live site on 2026-08-02 and written into external-issues.json as measured false positives.",
+  "url": "https://example.com/",
+  "score": 70.1,
+  "pages": [
+    {
+      "url": "https://example.com/",
+      "results": [
+        { "check": "cont-heading-structure", "status": "fail", "message": "Heading levels skip from h2 to h5", "recommendation": "Use consecutive heading levels." },
+        { "check": "cont-json-ld", "status": "fail", "message": "Structured data is missing a required @type", "recommendation": "Add @type to the root object." },
+        { "check": "geo-listicle", "status": "warn", "message": "Page has no listicle structure", "recommendation": "Add a numbered list or comparison table." },
+        { "check": "tech-broken-links", "status": "warn", "message": "Broken link detection requires site-wide crawl mode", "recommendation": "Re-run with --max-pages." },
+        { "check": "tech-meta-title", "status": "pass", "message": "Title length is within the 50-60 band" },
+        { "check": "tech-https", "status": "pass", "message": "Served over HTTPS with no mixed content" }
+      ]
+    }
+  ]
+}

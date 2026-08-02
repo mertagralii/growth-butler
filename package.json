@@ -1,0 +1,13 @@
+{
+  "name": "seo-butler",
+  "version": "2.2.0",
+  "private": true,
+  "description": "Test harness for the seo-butler plugin's deterministic scripts. The plugin itself ships as markdown + dependency-free .mjs; this file exists only so `npm test` and CI have an entry point.",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.mjs\""
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

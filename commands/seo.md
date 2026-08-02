@@ -68,6 +68,19 @@ Report. Two points are yours to enforce as the orchestrator:
   node ${CLAUDE_PLUGIN_ROOT}/scripts/score.mjs --state ./.seo-butler/state.json
   ```
 
+  **`--root` reads files; it cannot see what the server renders.** Whenever the project can be
+  started locally — always, for a server-rendered or templated stack — bring it up and run the same
+  validator against it, per **"Runtime verification" in `safety.md`**:
+
+  ```
+  node ${CLAUDE_PLUGIN_ROOT}/scripts/validate-artifacts.mjs --url http://localhost:<port> \
+    --pages /,<key routes> --json
+  ```
+
+  This is the difference between catching a template that HTML-encoded the JSON-LD type today and
+  catching it after the user deploys. Starting the app is the orchestrator's job, never a
+  specialist's.
+
   Roll back anything that regressed a check, mark it `partial`/`todo` in state with the reason, and
   report it. If verification can't run at all, say so — never imply it passed.
 

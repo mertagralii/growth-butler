@@ -1,0 +1,7 @@
+# Example Co
+
+> A fixture site used by the seo-butler test suite.
+
+## Pages
+- [Home](https://example.com/)
+- [Pricing](https://example.com/pricing)

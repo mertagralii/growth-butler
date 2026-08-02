@@ -1,0 +1,75 @@
+{
+  "$fixture": "Shaped after a real OpenSEO get_audit_issues payload. The /Home/Index cluster, the noindex auth pages and the /cdn-cgi/ link are the exact pattern measured on a live site on 2026-08-02 (see the field report): 20 raw findings that were really 3 root causes.",
+  "summary": { "total": 10, "critical": 6, "warning": 4 },
+  "issues": [
+    {
+      "issueType": "broken-internal-link",
+      "severity": "critical",
+      "url": "https://example.com/",
+      "title": "Internal link returns 404",
+      "howToFix": "Point the link at a route that exists.",
+      "details": { "targetUrl": "https://example.com/Home/Index" }
+    },
+    {
+      "issueType": "broken-internal-link",
+      "severity": "critical",
+      "url": "https://example.com/pricing",
+      "title": "Internal link returns 404",
+      "details": { "targetUrl": "https://example.com/Home/Index" }
+    },
+    {
+      "issueType": "broken-internal-link",
+      "severity": "critical",
+      "url": "https://example.com/about",
+      "title": "Internal link returns 404",
+      "details": { "targetUrl": "https://example.com/Home/Index" }
+    },
+    {
+      "issueType": "broken-page",
+      "severity": "critical",
+      "url": "https://example.com/Home/Index",
+      "title": "Page returns 404"
+    },
+
+    {
+      "issueType": "broken-internal-link",
+      "severity": "critical",
+      "url": "https://example.com/contact",
+      "title": "Internal link returns 404",
+      "details": { "targetUrl": "https://example.com/cdn-cgi/l/email-protection" }
+    },
+
+    {
+      "issueType": "noindex-page",
+      "severity": "info",
+      "url": "https://example.com/giris",
+      "title": "Page is noindex"
+    },
+    {
+      "issueType": "noindex-page",
+      "severity": "info",
+      "url": "https://example.com/kayit-ol",
+      "title": "Page is noindex"
+    },
+    {
+      "issueType": "missing-meta-description",
+      "severity": "warning",
+      "url": "https://example.com/giris",
+      "title": "Missing meta description"
+    },
+
+    {
+      "issueType": "heading-order-skip",
+      "severity": "warning",
+      "url": "https://example.com/",
+      "title": "Heading level skipped (h2 followed by h5)"
+    },
+
+    {
+      "issueType": "quantum-entanglement-score",
+      "severity": "warning",
+      "url": "https://example.com/",
+      "title": "An issue type this plugin has never heard of"
+    }
+  ]
+}

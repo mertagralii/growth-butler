@@ -66,20 +66,41 @@ link generation emitted a non-canonical URL site-wide, and `sitemap.xml` shipped
 in the files, all broken in the output. The lesson: **the file is not the output.**
 
 So for any server-rendered or templated stack (and whenever a local run is possible):
+
 1. Start the app on a local port.
-2. Fetch every indexable route and every generated artifact over HTTP.
-3. Verify against the **rendered response**, not the source:
-   - canonical value, and whether duplicate routes really return **301** (not 200);
-   - `<meta name="robots">` present/absent on the right pages;
-   - JSON-LD: the literal string `application/ld+json` appears in the raw response — then **extract each
-     block and parse it as JSON**; "the tag exists" is not verification;
-   - rendered internal links point at the **canonical** variant;
-   - sitemap: valid XML, no BOM (check the bytes);
-   - analytics tag present only in the intended environment.
-4. **If you can't run it, say so explicitly — never imply it was verified.**
+2. **Point the validator at it.** `--url` takes any origin — a localhost one works exactly like a
+   deployed one, so this is the same machine-checked verdict `/seo-live` produces, just earlier:
+
+   ```
+   node ${CLAUDE_PLUGIN_ROOT}/scripts/validate-artifacts.mjs --url http://localhost:<port> \
+     --pages /,<key routes> --json
+   ```
+
+   Reading the rendered HTML yourself instead is how these get missed — every one of them is a
+   judgement call you would have to make correctly on every page, and the script makes it the same
+   way every time. It settles: the literal `application/ld+json` type (and each block parsed, with
+   the real `@type` inventory), sitemap XML + BOM **on the bytes**, robots.txt and the AI-bot groups,
+   canonical presence/uniqueness/absoluteness, `<meta name="robots">`, title and description budgets,
+   Open Graph and Twitter tags, `<html lang>`, mixed content, heading order and `<h1>` count, and
+   **link integrity** — the crawl follows links outward, so it reaches the `noindex` auth pages that
+   are absent from the sitemap and accumulate the broken links.
+
+3. Verify by hand only what the script deliberately leaves to judgement:
+   - whether duplicate routes really return **301** (not 200) — the script cannot know which routes
+     are meant to be duplicates;
+   - rendered internal links pointing at the **canonical** variant (checklist item 15);
+   - schema.org *required-field* depth beyond `@type`, against `standards.md`;
+   - the analytics tag being present only in the intended environment.
+4. **If you can't run it, say so explicitly — never imply it was verified.** A validator that did not
+   run is not a pass.
 5. *Optional while the local server is up:* run Lighthouse against it for early lab scores
    (`measurement.md`). Skip without ceremony if no browser is available — the real measurement happens
    against the deployed site in `/seo-live`, where CrUX field data is also available.
+
+A local run proves the output is right on your machine. It does not prove anything about the edge: a
+CDN can still rewrite robots.txt or the HTML body in production (`cdn-layer.md`), and only a run
+against the deployed origin sees that. So this shortens the feedback loop; it does not replace
+`/seo-live`.
 
 Local runtime verification proves it works on your machine. Proving it works *in production* is a separate
 step the user triggers after deploying — see `live-verification.md` and the `/seo-live` command.

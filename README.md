@@ -151,8 +151,9 @@ gösterilir, onay yine istenir.
 **Strateji fazını istiyorsan** planda 🔍 Strateji satırını onayla. Araştırmaya başlamadan önce sana bir
 kez sorar: anahtarsız (ücretsiz) mı, yoksa gerçek arama hacmi için OpenSEO mu. Parayı seçimden önce söyler.
 
-**Google adımları için** iki yol var: Claude-in-Chrome (kendi Chrome'un, kurulum yok) ya da bundled
-tarayıcıda **bir kez** kendin giriş yaparsın — profil kalıcı, sonraki koşularda hatırlar. İkisi de
+**Google adımları için** iki yol var: **Claude-in-Chrome** (zaten giriş yapmış olduğun kendi Chrome'un,
+kurulum yok — güvenilir yol bu) ya da bundled tarayıcıda kendin giriş yaparsın. Bundled tarayıcı her
+koşuda **sıfır profille** açılıyor, yani girişi hatırlamaz; o oturumda işi bitirmek gerekir. İkisi de
 yoksa kod tarafını yapar, sana tıklama tıklama yol tarifi verir. **Şifreni asla istemez.**
 
 **Script'leri elle de çalıştırabilirsin** — plugin'e gerek yok:
@@ -169,6 +170,24 @@ gerekçesiyle susturuyor, iki kaynağın aynı şeyi söylediğini `corroborated
 `--fail-on-act` ile CI'da kapı olur: düzeltilecek bir şey kaldıysa exit 1.
 
 `--fail-under` CI'da kapı kurmak için: skor eşiğin altındaysa exit 1.
+
+**`--url` sadece canlı site için değil.** Herhangi bir origin alır, yani `http://localhost:5173` de
+olur — proje yerelde ayağa kalkabiliyorsa bütün render-zamanı kontrolleri **deploy'dan önce** koşar.
+Şablon motorunun JSON-LD tipini kodlaması ya da sitemap'e BOM koyması dosyalardan görünmez; sadece
+sunucunun gönderdiği byte'lardan görünür.
+
+**Script'lerin kendi testleri var:**
+
+```
+npm test
+```
+
+Bağımlılık yok, ağ erişimi gerekmiyor (`--url` testleri kendi yerel fixture sunucusunu kaldırıyor).
+Testler script'leri CLI olarak koşturuyor — aynı argümanlar, aynı stdout, aynı exit kodları — çünkü
+plugin de onları böyle çağırıyor. Kapsananlar arasında: `n/a` maddelerinin paydadan düşmesi,
+ölçülmüş false positive'lerin gerekçesiyle susturulması, Razor'ın `+` kodlama tuzağı, sitemap BOM'u,
+kırık link taraması, redirect zincirleri, ve **statik dosya bulunmayan dinamik stack'lerde `fail`
+değil `skip` verilmesi** (ASP.NET/Django/Rails/Laravel/Spring'i yanlışlıkla suçlayan gerçek bir hata).
 
 ---
 
@@ -274,7 +293,7 @@ maddeleri paydadan düşürür ve kalanı 100'e normalize eder — elde yapılan
 |---|---|---|
 | **Node 18+** | ✅ Zorunlu | `scripts/` için. Ek bağımlılık yok. |
 | **chrome-devtools MCP** | Önerilir | Google'ın kendi aracı. **Lighthouse'u yerelde çalıştırır** (kota yok, anahtar yok), gerçek performans trace'i alır, render edilmiş DOM'u okur, OG görselini üretir. Pakette geliyor. |
-| **Google hesabı** | Search Console/GA4 için | Şifren bize hiç gelmez. İki yol: **Claude-in-Chrome** (kurulum yok) ya da bundled tarayıcıda **bir kez** giriş — profil kalıcı. İkisi de yoksa kod tarafı yapılır + yol tarifi verilir. |
+| **Google hesabı** | Search Console/GA4 için | Şifren bize hiç gelmez. İki yol: **Claude-in-Chrome** (kurulum yok, önerilen) ya da bundled tarayıcıda giriş — ama o her koşuda sıfır profille açılır, girişi hatırlamaz. İkisi de yoksa kod tarafı yapılır + yol tarifi verilir. |
 | **context7 MCP** | Opsiyonel | Framework'e özgü API'ları doğrulamak için. Pakette geliyor. |
 | **geodaddy MCP** | Önerilir | `/seo-verify`'ın GEO denetçisi: AI bot erişimi, schema stacking, semantik HTML, Core Web Vitals. **Tamamen ücretsiz — hesap yok, API key yok.** Pakette geliyor. |
 | **OpenSEO MCP** | Önerilir | İki iş birden: `/seo-verify`'ın site geneli crawl'ı + Search Console erişimi (**okuma ücretsiz, kredi harcamaz**), ve opsiyonel gerçek arama hacmi/zorluk verisi (~$10/ay). **Yoksa strateji anahtarsız çalışır** — nitel sinyaller, uydurma hacim yok. |
@@ -464,9 +483,11 @@ still approve it.
 **For the strategy phase**, approve the 🔍 Strategy line in the plan. Before researching anything it
 asks you once: keyless (free) or OpenSEO for real search volumes. The cost is stated before you choose.
 
-**For Google steps** there are two routes: Claude-in-Chrome (your own Chrome, no setup), or sign in
-**once** yourself in the bundled browser — the profile persists, so later runs remember. With neither,
-it does the code side and hands you exact click-by-click steps. **It never asks for your password.**
+**For Google steps** there are two routes: **Claude-in-Chrome** (the Chrome you are already signed
+into, no setup — this is the reliable one), or sign in yourself in the bundled browser. The bundled
+browser starts from a **fresh profile every run**, so it does not remember the login; finish the task
+in that session. With neither, it does the code side and hands you exact click-by-click steps.
+**It never asks for your password.**
 
 **You can run the scripts by hand** — no plugin needed:
 
@@ -482,6 +503,24 @@ measured false positives with the reason, and marks what two sources independent
 `corroborated`. `--fail-on-act` makes it a CI gate — exit 1 while anything actionable remains.
 
 `--fail-under` is a CI gate: exit 1 when the score is below the threshold.
+
+**`--url` is not just for deployed sites.** It takes any origin, so `http://localhost:5173` works
+too — if the project can be started locally, every render-time check runs **before** you deploy. A
+template engine encoding the JSON-LD type, or a BOM in the sitemap, is invisible in the files and
+visible only in the bytes the server sends.
+
+**The scripts have their own tests:**
+
+```
+npm test
+```
+
+No dependencies, no network (the `--url` tests stand up their own local fixture server). The tests
+drive the scripts as CLIs — same argv, same stdout, same exit codes — because that is how the plugin
+invokes them. Covered: `n/a` items leaving the denominator, each measured false positive suppressed
+with its reason, the Razor `+` encoding trap, the sitemap BOM, the outward link crawl, redirect
+chains, and **reporting `skip` rather than `fail` when a stack serves robots/sitemap from a route**
+(a real bug that accused correct ASP.NET/Django/Rails/Laravel/Spring projects).
 
 ---
 
@@ -592,7 +631,7 @@ reason behind them — not *"that image is probably your LCP"* but *"LCP 258 ms,
 |---|---|---|
 | **Node 18+** | ✅ Required | For `scripts/`. No other dependencies. |
 | **chrome-devtools MCP** | Recommended | Google's own tool. **Runs Lighthouse locally** (no quota, no key), records real performance traces, reads the rendered DOM, generates the OG image. Bundled. |
-| **A Google account** | For Search Console/GA4 | Your password never reaches the plugin. Two routes: **Claude-in-Chrome** (no setup), or sign in **once** in the bundled browser — the profile persists. With neither, you get the code side plus exact steps. |
+| **A Google account** | For Search Console/GA4 | Your password never reaches the plugin. Two routes: **Claude-in-Chrome** (no setup, recommended), or sign in in the bundled browser — but it starts from a fresh profile each run and will not remember. With neither, you get the code side plus exact steps. |
 | **context7 MCP** | Optional | Confirms framework-specific APIs. Bundled. |
 | **geodaddy MCP** | Recommended | `/seo-verify`'s GEO auditor: AI-bot access, schema stacking, semantic HTML, Core Web Vitals. **Completely free — no account, no API key.** Bundled. |
 | **OpenSEO MCP** | Recommended | Two jobs: `/seo-verify`'s site-wide crawl + Search Console access (**reading is free, spends no credits**), and the optional real volume/difficulty layer (~$10/mo). **Without it strategy runs keyless** — qualitative signals, no invented volumes. |

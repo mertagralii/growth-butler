@@ -46,14 +46,17 @@ that works:
 
 1. **Claude's in-Chrome tools** (`mcp__claude-in-chrome__*`), if present — the user's real Chrome with
    their real Google session. Zero setup, nothing to sign into. Try this first and say when you got it.
-2. **The bundled chrome-devtools MCP — usable, and it remembers.** It runs a visible browser against a
-   **persistent profile**, so a Google sign-in done there survives into later runs. The flow:
-   - Open the dashboard. **If you land on a sign-in wall, that is expected on the first run** — not a
-     failure to hide. Tell the user plainly: *"a browser window is open at Google's sign-in; sign in
-     there and tell me when you're done — you'll only have to do this once."* Then continue.
-   - On later runs the profile is already signed in and the steps just work.
+2. **The bundled chrome-devtools MCP — usable, but it does not remember.** It runs a visible browser
+   from a **fresh profile every run**, so it cannot hold a Google login: the sign-in wall comes back
+   next time. Do not promise otherwise. The flow:
+   - Open the dashboard. **A sign-in wall is expected** — not a failure to hide. Tell the user
+     plainly: *"a browser window is open at Google's sign-in; sign in there and tell me when you're
+     done. This session isn't kept, so if you'd rather do it once and be finished, Claude-in-Chrome
+     uses the Chrome you're already signed into."* Then continue.
    - **Never type, ask for, or store the password.** Google blocks automated logins; the user signs in
      themselves, in that window.
+   - Because the sign-in does not persist, prefer finishing the whole dashboard task in this one
+     session rather than leaving a step for "next run".
 3. **Neither available** → do the code side, mark the dashboard items `partial`, and output the exact
    click-by-click steps for the user. For a one-off dashboard task this is often the *fastest* honest
    outcome, not a consolation prize — say so rather than apologising.

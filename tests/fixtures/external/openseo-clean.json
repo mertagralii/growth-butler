@@ -1,0 +1,9 @@
+{
+  "$fixture": "A report with nothing to act on: two deliberately-noindex auth pages and the meta description finding that follows from them. This is what the last round of the convergence loop should look like - and it must exit 0 under --fail-on-act.",
+  "summary": { "total": 3, "critical": 0, "warning": 1 },
+  "issues": [
+    { "issueType": "noindex-page", "severity": "info", "url": "https://example.com/giris", "title": "Page is noindex" },
+    { "issueType": "noindex-page", "severity": "info", "url": "https://example.com/kayit-ol", "title": "Page is noindex" },
+    { "issueType": "missing-meta-description", "severity": "warning", "url": "https://example.com/giris", "title": "Missing meta description" }
+  ]
+}

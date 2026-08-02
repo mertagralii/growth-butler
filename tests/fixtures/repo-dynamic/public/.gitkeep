@@ -1,0 +1,5 @@
+This directory is deliberately empty.
+
+It stands in for ASP.NET Core / Django / Rails / Laravel / Spring projects, where robots.txt and
+sitemap.xml are served from a *route* and no static file exists. validate-artifacts.mjs --root must
+report `skip` here, never `fail` — inventing a failure on these stacks was a real field bug (P0-B).

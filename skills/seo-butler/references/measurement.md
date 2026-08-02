@@ -46,6 +46,13 @@ Schema.org *required-field* depth beyond `@type` is still a judgement call — m
 
 This layer is the floor. Even with no internet and no Chrome, `--root` still produces a real verdict.
 
+**`--url` is not "the deployed-site mode".** It takes any origin, so `http://localhost:5173` gets the
+same checks as a public domain — which means everything above is available *before* a deploy, as soon
+as the project can be started locally. Use it that way during `/seo`'s verification step
+(`safety.md` → Runtime verification); `--root` cannot see anything a template does at render time.
+What a local run still cannot see is the edge: robots.txt and HTML-body rewrites happen in production
+only (`cdn-layer.md`), so `/seo-live` against the real origin remains a separate, required step.
+
 ### Layer 2 — Lighthouse (Google's own auditor)
 
 **Primary: `lighthouse_audit` from the bundled chrome-devtools MCP.** Runs locally against a real
