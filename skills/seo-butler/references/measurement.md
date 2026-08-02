@@ -30,9 +30,17 @@ What it decides, on raw bytes rather than on a belief about the raw bytes:
 - **robots.txt**: parses per-user-agent groups properly, has an absolute `Sitemap:` line, no blanket
   `Disallow: /`, and none of the six AI citation bots blocked.
 - **Per page**: title/meta-description presence and length budget, canonical (single + absolute),
-  `noindex` hygiene, the five core Open Graph tags, `twitter:card`, `<html lang>`, exactly one `<h1>`.
+  `noindex` hygiene, the five core Open Graph tags, `twitter:card`, `<html lang>`, exactly one `<h1>`,
+  mixed content, and **heading order** (no skipped levels — invisible on screen, since level and size
+  are styled separately).
+- **Link integrity** (`--url` only): a bounded crawl seeded from `--pages` **and the sitemap**, following
+  internal links outward (`--link-depth`, default 2; `--max-links`, default 150). Reports every 4xx/5xx
+  target with the pages linking to it, and redirect chains over one hop. It reaches `noindex` pages —
+  login, register, password reset — precisely because they are absent from the sitemap and are where
+  broken links accumulate. `--no-links` skips it. Read `links.coverage`: if the cap was hit, coverage
+  was partial and the report must say so.
 
-Two of those checks exist because a passing build and a clean file read still shipped a broken site.
+Three of those checks exist because a passing build and a clean file read still shipped a broken site.
 Schema.org *required-field* depth beyond `@type` is still a judgement call — make it yourself, using
 `standards.md`, on top of the script's parse result.
 
@@ -94,6 +102,18 @@ Best evidence when available, but conditional — never block on it:
 - **Search Console** — via the user's already-logged-in browser (same approach as checklist items 32–33):
   indexed page count, coverage issues, and rich-results status. This is literally Google's verdict on the
   live site. Read-only unless the user asked for changes.
+
+### Layer 4 — Outside auditors (`ground-truth.md`, run by `/seo-verify`)
+Layers 1–3 all measure what *this* toolchain thinks to look at. Layer 4 asks tools with different
+blind spots: OpenSEO's site-wide crawl, geodaddy's GEO checks, and — importantly — **Lighthouse's
+SEO/accessibility/best-practices categories**, which Layers 2–2c compute and then use only for
+performance. Feed them all through `triage-external.mjs`, which maps every finding onto the fixed
+checklist and suppresses each tool's measured false positives.
+
+Why it is a separate layer rather than more of Layer 2: on a real site Lighthouse returned **SEO
+100/100** while the same site had a 404-ing internal link on three pages and a skipped heading level.
+Lighthouse audits one page load and cannot follow a link. Every source here is blind somewhere, and
+the only defence is not trusting any single one — including this toolchain's own validators.
 
 ## Lab vs field — keep them apart
 - **Lab** (Lighthouse) = a simulated load on one machine. Reproducible-ish, good for catching regressions,

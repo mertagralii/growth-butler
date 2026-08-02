@@ -132,6 +132,31 @@ drive GEO topic targeting, `Organization` schema, and the tone of any copy the b
         "crux": null }
     ]
   },
+  "groundTruth": {
+    "sources": {
+      "geodaddy":      { "connected": true,  "checkedAt": "2026-08-02" },
+      "openseo":       { "connected": true,  "checkedAt": "2026-08-02",
+                         "projectId": "eec24ec2-…", "creditsRemaining": 468 },
+      "searchConsole": { "connected": false, "checkedAt": "2026-08-02",
+                         "reason": "property not yet connected inside OpenSEO — inspect_urls unavailable" }
+    },
+    "lastRunAt": "2026-08-02",
+    "rounds": 2,
+    "stoppedBecause": "no act findings remained",
+    "closed": [
+      { "item": 13, "what": "/Home/Index 404 linked from 3 pages", "sources": ["openseo"],
+        "fixedAt": "2026-08-02", "reverifiedAt": "2026-08-03" }
+    ],
+    "dismissed": [
+      { "item": 9, "what": "geodaddy cont-json-ld 'missing @type'", "source": "geodaddy",
+        "reason": "root @graph pattern; every node has @type. Verified by parsing the blocks.",
+        "date": "2026-08-02" }
+    ],
+    "open": [
+      { "item": 14, "what": "/cdn-cgi/l/email-protection 404 on 5 pages", "owner": "user",
+        "reason": "Cloudflare Email Obfuscation — dashboard toggle, not a repo fix" }
+    ]
+  },
   "watch": {
     "lastCheckedAt": "2026-07-22",
     "history": [
@@ -189,6 +214,16 @@ drive GEO topic targeting, `Organization` schema, and the tone of any copy the b
 - The `deploy` block tracks **applied vs live**. `items` being `done` only means the change is in the
   codebase; until `liveVerifiedAt` is set by `/seo-live`, nothing has been proven in production and search
   engines may still see none of it. Keep `openFindings` populated while live issues remain unresolved.
+- The `groundTruth` block is written by **`/seo-verify`** (`ground-truth.md`) and is what makes the
+  convergence loop cheap on the second run. Three parts earn their keep:
+  **`sources`** records what is connected and, for anything that isn't, *why* — so the next run
+  doesn't re-attempt an OAuth the user declined, and so a missing source is never mistaken for a
+  clean one. **`dismissed`** is the important one: an external false positive that isn't recorded
+  comes back and costs the same investigation on every future run, so each entry stores the finding,
+  the source, and the **evidence** that settled it. **`open`** carries what the user alone can fix
+  (dashboard/CDN work) with the owner named, so it stays visible without being re-litigated.
+  Never mark a finding `closed` on the strength of having applied a fix — `reverifiedAt` means the
+  source was re-run afterwards and no longer reports it. Applied is not verified.
 - The `watch` block is written by `/seo-watch` (`monitoring.md`) and is the **only** thing that command
   writes — it never edits the user's code. Its `history` gives each check a baseline to diff against, and
   `skipped` records what couldn't be checked (e.g. Search Console with no logged-in browser) so a gap is

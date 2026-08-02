@@ -71,6 +71,15 @@ Report. Two points are yours to enforce as the orchestrator:
   Roll back anything that regressed a check, mark it `partial`/`todo` in state with the reason, and
   report it. If verification can't run at all, say so — never imply it passed.
 
+- **Ground-truth setup, on the first run only.** A developer who must configure four services before
+  getting value never gets value, so do it once here and record it. Follow **"First-run setup" in
+  `ground-truth.md`**: confirm the bundled **geodaddy** MCP answers (free, no account), confirm
+  **OpenSEO** (`whoami` → connection + credit balance, `list_projects` → the `projectId` everything
+  else needs, `create_project` if the site has none), and let `seo-analytics` connect **Search
+  Console** as it already does for items 32–33 — that connection is what makes GSC's own index
+  verdicts readable later, and it is free. Write the result to `state.json` → `groundTruth`,
+  including the reason for any source that isn't connected. Never block the run on a missing source.
+
 ## Notes
 
 - `$ARGUMENTS` (e.g. "only sitemap", "skip analytics") is a **scope hint** for the plan. Still show
@@ -79,3 +88,8 @@ Report. Two points are yours to enforce as the orchestrator:
   a final verify — say so plainly. Everything you can do without them, do.
 - **Applied is not live.** Close every run that changed something with the `/seo-live` hand-off; until
   it's deployed, search engines see none of it.
+- **Done is not verified.** Your own score is computed, not guessed — and it still cannot find the
+  check you never wrote. In the field this command reported 98/100 on a site with a 404-ing link on
+  three pages. So the hand-off is two steps, not one: *"Deploy, then run `/seo-live` to prove it
+  shipped and `/seo-verify` to have Search Console, OpenSEO and geodaddy check my work."* Say it every
+  time; a high score is exactly when it's least likely to be asked for.

@@ -64,8 +64,11 @@ first, too — items already `done` are settled and shouldn't be re-audited from
   Google Business Profile prep); offered only for real local/physical businesses.
 - `references/live-verification.md` — proving the work actually shipped: the `/seo-live` protocol run
   against the deployed site after the user deploys.
-- `references/cdn-layer.md` — why the live robots.txt can differ from the code, and how to find and fix
-  edge/CDN overrides (Cloudflare and friends).
+- `references/cdn-layer.md` — why the live site can differ from the code, and how to find and fix
+  edge/CDN overrides (Cloudflare and friends) — robots.txt, headers, **and the HTML body**.
+- `references/ground-truth.md` — the `/seo-verify` convergence loop: check the deployed site against
+  **Search Console, OpenSEO and geodaddy**, adjudicate what they report, close the real gaps, re-verify.
+  Holds the source table and the **measured** false positives. Read it before believing any external tool.
 - `references/measurement.md` — real numbers from real tools: schema validation, Lighthouse (PSI or local),
   CrUX field data, Search Console. Independent verdicts instead of marking our own homework.
 - `references/monitoring.md` — the read-only `/seo-watch` watchdog: periodic regression checks against the
@@ -91,18 +94,25 @@ competitor data. It's strictly additive: with no provider connected, strategy ru
 
 ## The commands
 
-Four commands, each answering a different question, in the order a project meets them:
+Five commands, each answering a different question, in the order a project meets them:
 
 | Command | Question | Writes code? | Cadence |
 |---|---|---|---|
 | `/seo` | *Did I do the work?* | ✅ after approval | when there's work |
 | `/seo-live` | *Did it ship?* | ❌ | after each deploy |
+| `/seo-verify` | *Does anyone else agree?* | ✅ after approval | after each deploy, until clean |
 | `/seo-watch` | *Did something break?* | ❌ | weekly, unattended |
 | `/seo-report` | *Is it working?* | ❌ | monthly |
 
 - **`/seo`** — the main run: audit → plan → approve → apply → verify.
 - **`/seo-live`** — after the user deploys: prove it works in production and measure it with real tools.
   Can lead into a supervised fix cycle.
+- **`/seo-verify`** (`ground-truth.md`) — the answer to *"we marked it done, but is it?"*. Crawls the
+  deployed site with **outside** auditors (Search Console, OpenSEO, geodaddy), adjudicates what they
+  report against the checklist, closes the real gaps through the normal plan gate, and re-runs them
+  until they agree. It exists because self-verification agrees with itself: in the field the butler
+  reported 98/100 while three pages carried a 404-ing link. **External findings are evidence, not
+  verdicts** — all three tools have measured false positives, catalogued in `external-issues.json`.
 - **`/seo-watch`** — the read-only watchdog for scheduled/unattended runs. Diffs live reality against the
   stored baseline and reports **regressions**. **Never changes anything**, because nobody is there to
   approve a plan; it hands off to the other two.
@@ -113,7 +123,8 @@ Four commands, each answering a different question, in the order a project meets
 Together they form a loop, which is the point: setup is a one-off, ranking is not.
 
 ```
-/seo → deploy → /seo-live → (weekly /seo-watch) → ~4 weeks → /seo-report → /seo → …
+/seo → deploy → /seo-live → /seo-verify ⟳ (until outside sources agree)
+     → (weekly /seo-watch) → ~4 weeks → /seo-report → /seo → …
 ```
 
 The two read-only commands are deliberately different jobs: `/seo-watch` catches things **breaking**

@@ -160,7 +160,13 @@ yoksa kod tarafını yapar, sana tıklama tıklama yol tarifi verir. **Şifreni 
 ```
 node scripts/validate-artifacts.mjs --url https://siten.com --root . --json
 node scripts/score.mjs --state ./.seo-butler/state.json --fail-under 90
+node scripts/triage-external.mjs --openseo issues.json --geodaddy gd.json --lighthouse lhr.json
 ```
+
+`triage-external.mjs` dış denetçilerin raporlarını alıp 35 maddelik checklist'e oturtuyor: aynı ölü
+URL'i sekiz farklı şekilde raporlayan bulguları **tek işe** indiriyor, ölçülmüş false positive'leri
+gerekçesiyle susturuyor, iki kaynağın aynı şeyi söylediğini `corroborated` diye işaretliyor.
+`--fail-on-act` ile CI'da kapı olur: düzeltilecek bir şey kaldıysa exit 1.
 
 `--fail-under` CI'da kapı kurmak için: skor eşiğin altındaysa exit 1.
 
@@ -172,11 +178,46 @@ node scripts/score.mjs --state ./.seo-butler/state.json --fail-under 90
 |---|---|---|---|
 | `/seo` | *İşi yaptım mı?* | ✅ **onaydan sonra** | iş oldukça |
 | `/seo-live` | *Yayına çıktı mı?* | ❌ | her deploy sonrası |
+| `/seo-verify` | *Benden başkası da aynı şeyi söylüyor mu?* | ✅ **onaydan sonra** | deploy sonrası, temiz çıkana kadar |
 | `/seo-watch` | *Bir şey bozuldu mu?* | ❌ **asla** | haftalık, gözetimsiz |
 | `/seo-report` | *İşe yaradı mı?* | ❌ | aylık |
 
 35 maddelik **sabit** bir checklist üzerinden çalışır. Sabit olması kasıtlı: sonraki koşularda yeni
 madde uydurmaz — ya yaptı ya yapmadı.
+
+### `/seo-verify` — kendi notunu kendi vermesin
+
+Plugin skoru **hesaplıyor**, tahmin etmiyor. Ama kendi kendini doğrulayan bir sistem, yazmayı unuttuğu
+kontrolü asla bulamaz. Sahada tam olarak bu oldu: plugin **98/100 ve 35/35 madde** raporladı, oysa o
+anda üç sayfada 404 veren bir link, beş sayfada ölü bir iletişim linki ve `done` işaretli bir maddede
+atlanmış başlık seviyesi vardı. Dışarıdan bir crawler hepsini tek turda buldu.
+
+`/seo-verify` bunu kalıcı olarak kapatıyor. Deploy'dan sonra siteyi **başkalarına** denetletiyor:
+
+- **Google Search Console** — "bu sayfa indexlendi mi, indexlenmediyse neden?" Bunu başka hiçbir şey
+  cevaplayamaz. Ücretsiz.
+- **OpenSEO** — site geneli crawl: kırık linkler, tekrarlanan/eksik metadata, yönlendirme zincirleri,
+  orphan sayfalar. Sonuçları okumak **ücretsiz**; sadece yeni crawl kredi harcıyor.
+- **geodaddy** — GEO tarafı: AI botlarının erişimi, schema stacking, semantik HTML, Core Web Vitals.
+  Tamamen ücretsiz, hesap ve API key istemiyor. Pakette geliyor.
+- **Lighthouse** — Google'ın kendi denetimi; chrome-devtools MCP'siyle **yerelde** çalışıyor, kota ve
+  anahtar yok. Zaten performans katmanıydı; artık SEO/erişilebilirlik bulguları da triage'a giriyor.
+
+Neden dört kaynak? Çünkü her biri **başka bir yerde kör**. Aynı sitede aynı oturumda ölçüldü:
+**Lighthouse SEO'ya 100/100 verdi**, o sırada OpenSEO üç sayfada 404 veren link, geodaddy atlanmış
+başlık seviyesi buldu — ikisi de elle doğrulandı. Lighthouse tek bir sayfa yüklemesini denetliyor, link
+takip edemiyor, dolayısıyla kırık linki hiçbir zaman göremez. Tek yeşil skor, denetlediği sayfa
+hakkında kanıttır; site hakkında değil.
+
+Sonra bulguları düzeltiyor ve **aynı kaynaklara tekrar sorup** gittiğini doğruluyor. Kaynaklar temiz
+çıkana kadar (en fazla 3 tur) döngü sürüyor.
+
+**Ama dış araca körü körüne uymuyor.** Üçünün de false positive'i var ve olmayan bir hatayı "düzeltmek"
+zaten doğru olan siteyi bozar. Ölçülüp doğrulanmış üç örnek `scripts/external-issues.json`'da kayıtlı:
+OpenSEO, kendi raporunda `noindex` dediği sayfalara "meta description eksik" diyor; geodaddy, kanonik
+`@graph` desenini kullanan JSON-LD'ye "@type yok" diyor; ve düz metin sayfalara "listicle formatı yok"
+diyor. Kural net: **dış bulgu kanıttır, hüküm değil.** İki kaynak aynı şeyi söylediğinde ise
+`corroborated` işaretleniyor — eldeki en güçlü sinyal o.
 
 **Beş uzman agent:** teknik SEO · GEO & içerik · performans · erişilebilirlik · Search Console/GA4.
 
@@ -207,6 +248,9 @@ tüketmiyor. Bu plugin kaynağını gösteremediği bir sayıyı — kendi lehin
 - Bir template motoru JSON-LD script tipini HTML-encode etmişti (`application/ld&#x2B;json`) — sayfa
   render oluyor, JSON orada duruyor, hiçbir tüketici görmüyor.
 - `sitemap.xml` UTF-8 BOM ile çıkmıştı — katı XML parser'lar dosyayı tümden reddediyor, editörde görünmüyor.
+- Sitemap'ten yürüyen bir denetim kırık linkleri kaçırdı — çünkü kırık linklerin biriktiği sayfalar
+  (giriş, kayıt, şifre sıfırlama) `noindex` olduğu için sitemap'te yok. Artık link taraması sayfaların
+  *içindeki* linkleri takip ediyor, sadece verilen sayfaların ayakta olduğuna bakmıyor.
 
 Aynı site üzerinde iki koşu **byte-identik** çıktı verir. Skor 35 maddeyi ağırlıklandırır, `n/a`
 maddeleri paydadan düşürür ve kalanı 100'e normalize eder — elde yapılan aritmetiğin aksine tekrarlanabilir.
@@ -232,7 +276,8 @@ maddeleri paydadan düşürür ve kalanı 100'e normalize eder — elde yapılan
 | **chrome-devtools MCP** | Önerilir | Google'ın kendi aracı. **Lighthouse'u yerelde çalıştırır** (kota yok, anahtar yok), gerçek performans trace'i alır, render edilmiş DOM'u okur, OG görselini üretir. Pakette geliyor. |
 | **Google hesabı** | Search Console/GA4 için | Şifren bize hiç gelmez. İki yol: **Claude-in-Chrome** (kurulum yok) ya da bundled tarayıcıda **bir kez** giriş — profil kalıcı. İkisi de yoksa kod tarafı yapılır + yol tarifi verilir. |
 | **context7 MCP** | Opsiyonel | Framework'e özgü API'ları doğrulamak için. Pakette geliyor. |
-| **OpenSEO MCP** | Opsiyonel | Gerçek arama hacmi/zorluk verisi (~$10/ay). **Yoksa her şey anahtarsız çalışır** — nitel sinyaller, uydurma hacim yok. |
+| **geodaddy MCP** | Önerilir | `/seo-verify`'ın GEO denetçisi: AI bot erişimi, schema stacking, semantik HTML, Core Web Vitals. **Tamamen ücretsiz — hesap yok, API key yok.** Pakette geliyor. |
+| **OpenSEO MCP** | Önerilir | İki iş birden: `/seo-verify`'ın site geneli crawl'ı + Search Console erişimi (**okuma ücretsiz, kredi harcamaz**), ve opsiyonel gerçek arama hacmi/zorluk verisi (~$10/ay). **Yoksa strateji anahtarsız çalışır** — nitel sinyaller, uydurma hacim yok. |
 | **PSI API anahtarı** | Nadiren gerekir | Yalnızca yerel Chrome yokken devreye giren yedek. Lighthouse artık yerelde çalıştığı için çoğu kullanıcı buna hiç ihtiyaç duymaz. |
 
 Hafızası `./.seo-butler/state.json` içinde tutulur — `.gitignore`'a eklemeni önerir (iş profili
@@ -249,9 +294,15 @@ okunur ve geçmişin kaybolmadan `.seo-butler/`'a taşınır.
 
 ## Durum
 
-**v2.1.0.** Dört komut da gerçek bir projede (ASP.NET Core MVC, canlı site) uçtan uca çalıştırıldı ve
+**v2.2.0.** Dört komut da gerçek bir projede (ASP.NET Core MVC, canlı site) uçtan uca çalıştırıldı ve
 dürüstlük kapılarını geçti: skor bağımsız doğrulamayla birebir eşleşti, `/seo-report` veri yetersizken
 trend üretmeyi reddetti, `/seo` kendi skorunu yükseltebilecekken *"dürüst olmaz"* diyerek bırakmadı.
+
+Sonra aynı site dışarıdan denetlendi ve plugin'in **kendi 98/100'ünü yalanladı**: üç sayfada 404 veren
+bir link, beş sayfada ölü bir iletişim linki, `done` işaretli bir maddede atlanmış başlık seviyesi.
+Kök neden yapısaldı — kağıt üzerinde var olan ama arkasında mekanik kontrol olmayan madde, sessizce
+"model kaynağa bakar" seviyesine düşüyordu. v2.1.1 o kontrolleri yazdı, v2.2.0 ise
+`/seo-verify` ile dış denetimi kalıcı hale getirdi. Bu README'deki bütün bulgular ölçüm, iddia değil.
 
 **v2.1.0'daki yenilikler henüz tam bir koşuda denenmedi** — Playwright'tan chrome-devtools'a geçiş,
 ölçülen performans, yeni kontroller. Araçlar tek tek doğrulandı (1200×630 ekran görüntüsü, Lighthouse,
@@ -422,7 +473,13 @@ it does the code side and hands you exact click-by-click steps. **It never asks 
 ```
 node scripts/validate-artifacts.mjs --url https://yoursite.com --root . --json
 node scripts/score.mjs --state ./.seo-butler/state.json --fail-under 90
+node scripts/triage-external.mjs --openseo issues.json --geodaddy gd.json --lighthouse lhr.json
 ```
+
+`triage-external.mjs` takes the outside auditors' reports and maps them onto the 35-item checklist:
+it collapses one dead URL reported eight different ways into **one job**, suppresses each tool's
+measured false positives with the reason, and marks what two sources independently agree on as
+`corroborated`. `--fail-on-act` makes it a CI gate — exit 1 while anything actionable remains.
 
 `--fail-under` is a CI gate: exit 1 when the score is below the threshold.
 
@@ -434,11 +491,48 @@ node scripts/score.mjs --state ./.seo-butler/state.json --fail-under 90
 |---|---|---|---|
 | `/seo` | *Did I do the work?* | ✅ **after approval** | when there's work |
 | `/seo-live` | *Did it ship?* | ❌ | after each deploy |
+| `/seo-verify` | *Does anyone but me agree?* | ✅ **after approval** | after each deploy, until clean |
 | `/seo-watch` | *Did something break?* | ❌ **never** | weekly, unattended |
 | `/seo-report` | *Is it working?* | ❌ | monthly |
 
 It works from a **fixed** 35-item checklist. Fixed on purpose: it never invents new items on later
 runs — either it did them or it didn't.
+
+### `/seo-verify` — so it doesn't grade its own homework
+
+The score is **computed**, not estimated. But a system that verifies itself can never find the check
+it forgot to write, and in the field that is exactly what happened: the plugin reported **98/100 and
+35/35 items** on a site that at that moment had a 404-ing link on three pages, a dead contact link on
+five more, and a skipped heading level inside an item marked `done`. An outside crawler found all of
+it in one pass.
+
+`/seo-verify` closes that permanently. After a deploy it has the site audited by **someone else**:
+
+- **Google Search Console** — *"is this page indexed, and if not, why?"* Nothing else can answer that.
+  Free.
+- **OpenSEO** — site-wide crawl: broken links, duplicate/missing metadata, redirect chains, orphan
+  pages. Reading the results is **free**; only a fresh crawl spends credits.
+- **geodaddy** — the GEO side: AI-bot access, schema stacking, semantic HTML, Core Web Vitals.
+  Completely free, no account, no API key. Bundled.
+- **Lighthouse** — Google's own audit, run **locally** through the chrome-devtools MCP, so no quota
+  and no key. It was already the performance layer; now its SEO and accessibility findings are
+  triaged too.
+
+Why four sources? Because each is blind somewhere different. Measured on one site in one session:
+**Lighthouse scored SEO 100/100** while OpenSEO found a 404-ing internal link on three pages and
+geodaddy found a skipped heading level — both confirmed by hand. Lighthouse audits a single page load
+and cannot follow a link, so it can never report a broken one. A green score is evidence about the
+page it audited, and about nothing else.
+
+Then it fixes what came back and **asks the same sources again** to confirm it's gone, looping until
+they agree (three rounds maximum).
+
+**It does not blindly obey them.** All three produce false positives, and "fixing" one damages a site
+that was already correct. Three measured cases are recorded in `scripts/external-issues.json`: OpenSEO
+reports a missing meta description on pages its own report flags as `noindex`; geodaddy reports
+"missing @type" against JSON-LD using the canonical `@graph` pattern; and it wants listicle formatting
+on ordinary prose. The rule: **an external finding is evidence, not a verdict.** When two sources
+independently report the same thing it's marked `corroborated` — the strongest signal available.
 
 **Five specialist agents:** technical SEO · GEO & content · performance · accessibility · Search Console/GA4.
 
@@ -470,6 +564,9 @@ passing build still shipped a broken site:
   renders, the JSON is right there, and no consumer recognises it.
 - `sitemap.xml` shipped with a UTF-8 BOM — strict XML parsers reject the whole file, and it's
   invisible in an editor.
+- A sitemap-driven audit missed broken links entirely — the pages where broken links accumulate
+  (login, register, password reset) are `noindex`, so they aren't in the sitemap. The link crawl now
+  follows links *inside* pages instead of only checking that the given pages are alive.
 
 Two runs on an unchanged site produce **byte-identical** output. The score weights all 35 items,
 drops `n/a` items from the denominator, and renormalizes the rest to 100 — repeatable, unlike hand
@@ -497,7 +594,8 @@ reason behind them — not *"that image is probably your LCP"* but *"LCP 258 ms,
 | **chrome-devtools MCP** | Recommended | Google's own tool. **Runs Lighthouse locally** (no quota, no key), records real performance traces, reads the rendered DOM, generates the OG image. Bundled. |
 | **A Google account** | For Search Console/GA4 | Your password never reaches the plugin. Two routes: **Claude-in-Chrome** (no setup), or sign in **once** in the bundled browser — the profile persists. With neither, you get the code side plus exact steps. |
 | **context7 MCP** | Optional | Confirms framework-specific APIs. Bundled. |
-| **OpenSEO MCP** | Optional | Real search volume/difficulty (~$10/mo). **Without it everything runs keyless** — qualitative signals, no invented volumes. |
+| **geodaddy MCP** | Recommended | `/seo-verify`'s GEO auditor: AI-bot access, schema stacking, semantic HTML, Core Web Vitals. **Completely free — no account, no API key.** Bundled. |
+| **OpenSEO MCP** | Recommended | Two jobs: `/seo-verify`'s site-wide crawl + Search Console access (**reading is free, spends no credits**), and the optional real volume/difficulty layer (~$10/mo). **Without it strategy runs keyless** — qualitative signals, no invented volumes. |
 | **A PSI API key** | Rarely needed | Only the fallback for when there's no local Chrome. Lighthouse runs locally now, so most people never need it. |
 
 Its memory lives in `./.seo-butler/state.json` — it suggests adding that to `.gitignore` (it holds a

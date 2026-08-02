@@ -11,6 +11,10 @@
     "openseo": {
       "type": "http",
       "url": "https://app.openseo.so/mcp"
+    },
+    "geodaddy": {
+      "command": "npx",
+      "args": ["-y", "geodaddy-mcp"]
     }
   }
 }

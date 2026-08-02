@@ -57,7 +57,14 @@ centralized in the orchestrator (see `safety.md`).
    (lab), CrUX (real users), Search Console. Never blend them into one number — they answer different
    questions, and a high coverage score is not evidence the site is fast or indexed.
 
-6. **Set the follow-up expectation.** Verified-live is not the same as working. Close with the honest
+6. **Hand off to `/seo-verify`.** You just checked the deployed site with **your own** eyes, and your
+   own eyes share your own blind spots — this command has passed a site clean while three pages
+   carried a 404-ing link, because nothing here crawls outward from the pages you nominated. Now that
+   the site is deployed, outside auditors can reach it: tell the user to run **`/seo-verify`** so
+   Search Console, OpenSEO and geodaddy check the same work independently, and so the gaps they find
+   get closed and re-verified (`ground-truth.md`).
+
+7. **Set the follow-up expectation.** Verified-live is not the same as working. Close with the honest
    timeline: Google needs days to weeks to re-crawl and settle, so tell the user to run **`/seo-report`
    in about four weeks** to see what actually moved — and, if they want breakage caught sooner, to
    schedule `/seo-watch` weekly (`monitoring.md`).
