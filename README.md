@@ -89,7 +89,7 @@ CI'da kapı kurmak için: `node scripts/score.mjs --fail-under 90`.
 |---|---|---|
 | **Node 18+** | ✅ Zorunlu | `scripts/` için. Ek bağımlılık yok. |
 | **chrome-devtools MCP** | Önerilir | Google'ın kendi aracı. **Lighthouse'u yerelde çalıştırır** (kota yok, anahtar yok), gerçek performans trace'i alır, render edilmiş DOM'u okur, OG görselini üretir. Pakette geliyor. |
-| **Google hesabı** | Search Console/GA4 için | Şifren bize hiç gelmez. Tarayıcıdan otomatikleştirmek istersen **Claude-in-Chrome** gerekir (kendi oturum açmış Chrome'un); yoksa butler kod tarafını yapar ve sana tıklama tıklama yol tarifi verir. |
+| **Google hesabı** | Search Console/GA4 için | Şifren bize hiç gelmez. İki yol var: **Claude-in-Chrome** (kendi Chrome'un, kurulum yok) ya da bundled tarayıcıda **bir kez** kendin giriş yaparsın — profil kalıcı, sonraki koşularda hatırlar. İkisi de yoksa butler kod tarafını yapar ve tıklama tıklama yol tarifi verir. |
 | **PSI API anahtarı** | Opsiyonel, nadiren gerekir | Yalnızca yerel Chrome yokken devreye giren yedek yol. Lighthouse artık yerelde çalıştığı için çoğu kullanıcının buna hiç ihtiyacı olmaz. |
 | **context7 MCP** | Opsiyonel | Framework'e özgü API'ları doğrulamak için. Pakette geliyor. |
 | **OpenSEO MCP** | Opsiyonel | Gerçek arama hacmi/zorluk verisi (~$10/ay). **Yoksa her şey anahtarsız çalışır** — nitel sinyaller, uydurma hacim yok. |
@@ -216,7 +216,7 @@ reason behind them — not *"that image is probably your LCP"* but *"LCP 258 ms,
 |---|---|---|
 | **Node 18+** | ✅ Required | For `scripts/`. No other dependencies. |
 | **chrome-devtools MCP** | Recommended | Google's own tool. **Runs Lighthouse locally** (no quota, no key), records real performance traces, reads the rendered DOM, generates the OG image. Bundled. |
-| **A Google account** | For Search Console/GA4 | Your password never reaches the plugin. To automate it in a browser you need **Claude-in-Chrome** (your own signed-in Chrome); without it the butler does the code side and hands you exact click-by-click steps. |
+| **A Google account** | For Search Console/GA4 | Your password never reaches the plugin. Two routes: **Claude-in-Chrome** (your own Chrome, no setup), or sign in **once** yourself in the bundled browser — its profile persists, so later runs remember. With neither, the butler does the code side and hands you exact click-by-click steps. |
 | **A PSI API key** | Optional, rarely needed | Only the fallback for when there's no local Chrome. Lighthouse now runs locally, so most people never need this. |
 | **context7 MCP** | Optional | Confirms framework-specific APIs. Bundled. |
 | **OpenSEO MCP** | Optional | Real search volume/difficulty (~$10/mo). **Without it everything runs keyless** — qualitative signals, no invented volumes. |

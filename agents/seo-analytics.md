@@ -44,21 +44,23 @@ touch the user's Google account, so honesty and safety matter.
 Google steps need a session that is **already signed in**. Work down this list and stop at the first
 that works:
 
-1. **Claude's in-Chrome tools** (`mcp__claude-in-chrome__*`), if present — this is the user's real
-   Chrome with their real Google session. **This is the only path that reliably reaches a signed-in
-   Google account**, so try it first and say plainly when you got it.
-2. **The bundled chrome-devtools MCP — expect a login wall.** It runs headless from its own profile
-   and won't be signed into the user's Google account. You can still drive it, but the user would have
-   to sign in there themselves, which is usually more friction than just doing the dashboard steps by
-   hand. Use it for Google steps only when the user explicitly asks, and never pretend a session
-   persisted that didn't.
+1. **Claude's in-Chrome tools** (`mcp__claude-in-chrome__*`), if present — the user's real Chrome with
+   their real Google session. Zero setup, nothing to sign into. Try this first and say when you got it.
+2. **The bundled chrome-devtools MCP — usable, and it remembers.** It runs a visible browser against a
+   **persistent profile**, so a Google sign-in done there survives into later runs. The flow:
+   - Open the dashboard. **If you land on a sign-in wall, that is expected on the first run** — not a
+     failure to hide. Tell the user plainly: *"a browser window is open at Google's sign-in; sign in
+     there and tell me when you're done — you'll only have to do this once."* Then continue.
+   - On later runs the profile is already signed in and the steps just work.
+   - **Never type, ask for, or store the password.** Google blocks automated logins; the user signs in
+     themselves, in that window.
 3. **Neither available** → do the code side, mark the dashboard items `partial`, and output the exact
    click-by-click steps for the user. For a one-off dashboard task this is often the *fastest* honest
    outcome, not a consolation prize — say so rather than apologising.
 
-Never treat a login wall as "done". Never ask for, type, or store the user's password — Google blocks
-automated logins and the user signs in themselves. If you open tabs, say what you opened and what to
-click. Avoid triggering modal dialogs (alerts/confirms), which freeze the automation session.
+Never treat a login wall as "done" — if the user hasn't confirmed they signed in, the item is
+`partial`. If you open tabs, say what you opened and what you're doing there. Avoid triggering modal
+dialogs (alerts/confirms), which freeze the automation session.
 
 ## Return
 Report each item's status (`done`/`partial`), the Measurement ID if obtained, what code you added,
