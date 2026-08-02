@@ -27,12 +27,22 @@ reflect 2026 reality. GEO-specific guidance lives in `geo.md`.
   auth, thank-you, staging) → `noindex`.
 - Never leave a site-wide `noindex` or `Disallow: /` from a staging build in production — this is a
   top cause of "my site vanished from Google." Check for it explicitly.
+- **No mixed content.** On an HTTPS page, every subresource (`src`, `href`, `srcset`, CSS `url()`,
+  form `action`) must also be HTTPS. A single `http://` asset breaks the padlock, gets the resource
+  blocked by the browser outright, and is a trust signal both users and crawlers read. Check the
+  rendered response, not just the templates — a CMS or an inlined third-party snippet is the usual culprit.
+- **Redirect chains: at most one hop.** `A → B` is fine; `A → B → C` wastes crawl budget, loses a
+  little link equity at each hop, and — when the chain ends at an error page — reads to Google as a
+  **soft 404** rather than a real one. Point the first URL straight at the final destination.
 
 ## robots.txt
 - Allow crawling of the public site. `Disallow` only genuine non-public paths (admin, internal APIs,
   cart, infinite filter permutations). Always include an absolute `Sitemap:` line.
 - **Do NOT block AI citation bots** unless the user opts out (see `geo.md` Tier 1): GPTBot,
-  OAI-SearchBot, ClaudeBot, PerplexityBot, Google-Extended, Bingbot.
+  OAI-SearchBot, ClaudeBot, PerplexityBot, Google-Extended, Bingbot, GoogleOther, Bytespider, CCBot.
+  The last three are the commonly-missed ones — `GoogleOther` is Google's separate non-Search crawler
+  (AI Overviews eligibility), `Bytespider` is ByteDance's, and `CCBot` feeds Common Crawl, which a
+  large share of models train and retrieve from.
 
 ## sitemap.xml
 - Include only indexable, canonical, 200-status URLs (exclude noindex, redirects, auth-gated, canonicalized-away).
@@ -56,15 +66,22 @@ model. This is the deterministic, text-crisp path:
    name, and a page-appropriate headline. Use system font stacks so nothing depends on a network fetch.
    Pull the brand name, headline source, colors, and logo from `state.json` / the site's real content —
    **never invent a logo or brand colors.** If the brand has no known colors, use a neutral dark card.
-2. **Screenshot it with the bundled Playwright MCP** at exactly `1200×630`, `deviceScaleFactor: 1`,
-   `omitBackground: false`, full-element (not full-page) capture.
+2. **Render and capture it** with the bundled chrome-devtools MCP — three calls, in this order:
+   ```
+   navigate_page(url: "file:///…/og-template.html")
+   resize_page(width: 1200, height: 630)
+   take_screenshot(filePath: "…/og-image.png", format: "png")
+   ```
+   Resizing *before* the screenshot is what makes the viewport capture come out at exactly 1200×630.
+   (`take_screenshot` also accepts a `uid` from `take_snapshot` to capture a single element, if the
+   template ever needs to be part of a larger page.)
 3. **Read the PNG back and verify it is really 1200×630** before accepting it. A card at the wrong
    size is worse than no card — social platforms crop it unpredictably. PNG dimensions live in the
    IHDR chunk: bytes 16–19 are the width and 20–23 the height, both big-endian `uint32`.
 4. **Save** it to the stack's public/static dir and reference it as an **absolute** URL.
 
-**Fallback:** if Playwright isn't available in the session, report the missing `og:image` as a finding
-rather than shipping a broken or wrongly-sized card.
+**Fallback:** if chrome-devtools isn't available in the session, report the missing `og:image` as a
+finding rather than shipping a broken or wrongly-sized card.
 
 ## Structured data (JSON-LD) — pick types by real content
 Emit as `<script type="application/ld+json">`. **Only assert facts present on the page.** Never
@@ -75,6 +92,9 @@ fabricate ratings, prices, authors, or reviews (Google penalizes this; it also b
 - **Product** for product pages: name, image, description, brand, and `Offer` (price, priceCurrency,
   availability) — only if that data is truly on the page. Add `AggregateRating`/`Review` only if real.
 - **FAQPage** for genuine Q&A content (also a strong GEO signal).
+- **ItemList** for pages that really are a list — "Top 10 X", ranked comparisons, step-ordered
+  collections. Answer engines lift ordered lists almost verbatim, so marking the list up as a list is
+  one of the cheapest GEO wins available.
 - **BreadcrumbList** where navigation/breadcrumbs exist.
 - **HowTo** for genuine step-by-step instructions on the page: `name`, ordered `step` list (each with
   `text`, optional `image`/`name`). Only when the page really is a how-to — not for generic prose.
@@ -85,6 +105,13 @@ fabricate ratings, prices, authors, or reviews (Google penalizes this; it also b
 - Validate mentally against schema.org required/recommended fields; prefer completeness on recommended fields.
 - **Only assert what's genuinely on the page.** These richer types unlock rich results only when the
   visible content backs them — mismatched/absent content is a Google manual-action risk, not a win.
+
+**Stack the types where the content earns it.** One `Article` block is the floor, not the goal. A
+listicle article with a Q&A section legitimately carries **`Article` + `ItemList` + `FAQPage`** at
+once, and each one gives an answer engine a different, independently extractable handle on the page:
+the byline and date, the ranked items, the question/answer pairs. Layering costs nothing and is a
+real GEO lever — **but only when each type describes something actually on the page.** Never add a
+type to pad the stack; fabricated markup is the fastest route to a manual action.
 
 ## E-E-A-T / authority & trust signals
 Experience, Expertise, Authoritativeness, Trust — signals both Google and AI answer engines weigh when
@@ -109,6 +136,9 @@ fabricate) what's missing.
 - Meaningful images: specific, useful `alt` (describe content + purpose, not the filename). Decorative
   images: `alt=""`. Never omit the attribute entirely.
 - Descriptive link text (no bare "click here"). `<html lang>` matches primary content language.
+- **Never skip a heading level.** `h1 → h3` with no `h2` between them breaks the document outline
+  that screen readers and AI extractors both walk. Headings convey *structure*, not size — if a
+  heading looks too big, fix it in CSS, never by jumping a level.
 
 ## Performance — Core Web Vitals (2026 thresholds)
 Google measures at the **75th percentile of real users (CrUX)**. "Good" targets:
@@ -117,6 +147,13 @@ Google measures at the **75th percentile of real users (CrUX)**. "Good" targets:
   commonly failed metric. Caused by heavy/long JS tasks blocking the main thread.
 - **CLS (visual stability)** — ≤ **0.1** (poor > 0.25). Caused by images/ads/embeds without reserved
   space, or late-injected content and fonts.
+
+Supporting metrics — not Core Web Vitals themselves, but the trace reports them and they explain
+*why* a Core metric is bad, so judge them against real numbers instead of eyeballing:
+- **TTFB (server response)** — ≤ **800 ms** (poor > 1.8 s). A slow TTFB caps LCP no matter what you
+  do on the front end; it points at hosting, database, or missing caching, not at the markup.
+- **FCP (first paint)** — ≤ **1.8 s** (poor > 3.0 s).
+- **TBT (total blocking time)** — ≤ **200 ms** (poor > 600 ms). The lab stand-in for INP.
 
 **Apply automatically (safe):** explicit `width`/`height` (or aspect-ratio) on images to kill CLS;
 `loading="lazy"` below the fold; `fetchpriority="high"` + preload on the LCP image; `preconnect`/

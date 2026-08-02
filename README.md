@@ -67,6 +67,13 @@ node scripts/score.mjs --state ./.seo-butler/state.json
 
 Aynı site üzerinde iki koşu **byte-identik** çıktı verir. Skor 35 maddeyi ağırlıklandırır, `n/a`
 maddeleri paydadan düşürür ve kalanı 100'e normalize eder — elde yapılan aritmetiğin aksine tekrarlanabilir.
+CI'da kapı kurmak için: `node scripts/score.mjs --fail-under 90`.
+
+**Performans da tahmin değil, ölçüm.** Chrome DevTools trace'i gerçek LCP/CLS ve nedenlerini veriyor —
+*"bu görsel muhtemelen LCP'indir"* değil, *"LCP 258 ms, 138 ms'i render gecikmesi"*.
+
+> Bağımsız bir GEO ikinci görüşü istersen [GeoDaddy](https://github.com/borabiricik/geodaddy-cli)
+> (ücretsiz, yerel, açık kaynak) kendi başına çalıştırılabilir. Bu plugin ona bağımlı değil.
 
 ## Dürüstlük kapıları
 
@@ -81,9 +88,9 @@ maddeleri paydadan düşürür ve kalanı 100'e normalize eder — elde yapılan
 | Ne | Gerekli mi | Not |
 |---|---|---|
 | **Node 18+** | ✅ Zorunlu | `scripts/` için. Ek bağımlılık yok. |
-| **Playwright MCP** | Önerilir | Render edilmiş DOM, OG görsel üretimi, dashboard adımları. Pakette geliyor. |
+| **chrome-devtools MCP** | Önerilir | Google'ın kendi aracı. **Lighthouse'u yerelde çalıştırır** (kota yok, anahtar yok), gerçek performans trace'i alır, render edilmiş DOM'u okur, OG görselini üretir. Pakette geliyor. |
 | **Google hesabı** | Search Console/GA4 için | Şifren bize hiç gelmez. Tarayıcıdan otomatikleştirmek istersen **Claude-in-Chrome** gerekir (kendi oturum açmış Chrome'un); yoksa butler kod tarafını yapar ve sana tıklama tıklama yol tarifi verir. |
-| **PSI API anahtarı** | Opsiyonel, ücretsiz | Anahtarsız PageSpeed Insights'ın günlük kotası var ve tekrarlı koşularda doluyor — Lighthouse ölçümünü düzenli istiyorsan ücretsiz bir anahtar al. |
+| **PSI API anahtarı** | Opsiyonel, nadiren gerekir | Yalnızca yerel Chrome yokken devreye giren yedek yol. Lighthouse artık yerelde çalıştığı için çoğu kullanıcının buna hiç ihtiyacı olmaz. |
 | **context7 MCP** | Opsiyonel | Framework'e özgü API'ları doğrulamak için. Pakette geliyor. |
 | **OpenSEO MCP** | Opsiyonel | Gerçek arama hacmi/zorluk verisi (~$10/ay). **Yoksa her şey anahtarsız çalışır** — nitel sinyaller, uydurma hacim yok. |
 
@@ -186,7 +193,13 @@ Both work on **raw bytes**, because in the field a passing build still shipped a
 
 Two runs on an unchanged site produce **byte-identical** output. The score weights all 35 items,
 drops `n/a` items from the denominator, and renormalizes the rest to 100 — repeatable, unlike hand
-arithmetic.
+arithmetic. Gate it in CI with `node scripts/score.mjs --fail-under 90`.
+
+**Performance is measured too, not guessed.** A Chrome DevTools trace gives real LCP/CLS and the
+reason behind them — not *"that image is probably your LCP"* but *"LCP 258 ms, 138 ms of it render delay"*.
+
+> Want an independent second opinion on GEO? [GeoDaddy](https://github.com/borabiricik/geodaddy-cli)
+> (free, local, open source) can be run on its own. This plugin doesn't depend on it.
 
 ## Honesty gates
 
@@ -202,9 +215,9 @@ arithmetic.
 | What | Required | Note |
 |---|---|---|
 | **Node 18+** | ✅ Required | For `scripts/`. No other dependencies. |
-| **Playwright MCP** | Recommended | Rendered DOM, OG image generation, dashboard steps. Bundled. |
+| **chrome-devtools MCP** | Recommended | Google's own tool. **Runs Lighthouse locally** (no quota, no key), records real performance traces, reads the rendered DOM, generates the OG image. Bundled. |
 | **A Google account** | For Search Console/GA4 | Your password never reaches the plugin. To automate it in a browser you need **Claude-in-Chrome** (your own signed-in Chrome); without it the butler does the code side and hands you exact click-by-click steps. |
-| **A PSI API key** | Optional, free | Keyless PageSpeed Insights has a daily quota that repeat runs exhaust — get a free key if you want Lighthouse measured regularly. |
+| **A PSI API key** | Optional, rarely needed | Only the fallback for when there's no local Chrome. Lighthouse now runs locally, so most people never need this. |
 | **context7 MCP** | Optional | Confirms framework-specific APIs. Bundled. |
 | **OpenSEO MCP** | Optional | Real search volume/difficulty (~$10/mo). **Without it everything runs keyless** — qualitative signals, no invented volumes. |
 

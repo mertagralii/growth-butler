@@ -41,14 +41,20 @@ function parseJson (text, what) {
 }
 
 function parseArgs (argv) {
-  const args = { state: null, statuses: null, json: false, help: false }
+  const args = { state: null, statuses: null, json: false, help: false, failUnder: null }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--json') args.json = true
     else if (a === '--help' || a === '-h') args.help = true
     else if (a === '--state') args.state = argv[++i]
     else if (a === '--statuses') args.statuses = argv[++i]
-    else throw new Error(`Unknown argument: ${a}`)
+    else if (a === '--fail-under') {
+      const n = Number(argv[++i])
+      if (!Number.isFinite(n) || n < 0 || n > 100) {
+        throw new Error('--fail-under needs a number between 0 and 100')
+      }
+      args.failUnder = n
+    } else throw new Error(`Unknown argument: ${a}`)
   }
   return args
 }
@@ -59,6 +65,7 @@ score.mjs - deterministic SEO/GEO coverage score
   --state <path>      state.json to read (default: ./.seo-butler/state.json)
   --statuses <json>   score an inline {"item":"status"} map instead of a state file
   --json              machine-readable output
+  --fail-under <n>    exit 1 if the score is below n (0-100). For CI gates.
   --help              this message
 `.trim()
 
@@ -224,6 +231,11 @@ function main () {
 
   if (args.json) console.log(JSON.stringify(result, null, 2))
   else console.log(render(result))
+
+  if (args.failUnder !== null && result.score < args.failUnder) {
+    console.error(`\nScore ${result.score} is below the --fail-under threshold of ${args.failUnder}.`)
+    process.exit(1)
+  }
 }
 
 main()

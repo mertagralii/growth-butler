@@ -27,10 +27,17 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve, join } from 'node:path'
 
+// The last three are the commonly-missed ones: GoogleOther is Google's separate non-Search crawler
+// (AI Overviews eligibility), Bytespider is ByteDance's, and CCBot feeds Common Crawl, which a large
+// share of models train and retrieve from. A catch-all `User-agent: *` block sweeps them up without
+// anyone intending it.
 const AI_BOTS = [
+  'Bytespider',
+  'CCBot',
   'ClaudeBot',
   'GPTBot',
   'Google-Extended',
+  'GoogleOther',
   'OAI-SearchBot',
   'PerplexityBot',
   'Bingbot'
@@ -520,6 +527,51 @@ function checkPage (add, page, res) {
   const lang = htmlTag ? attr(htmlTag[0], 'lang') : null
   add(`page[${page}].htmllang`, 'html_lang', 31, lang ? 'pass' : 'fail',
     lang ? `<html lang="${lang}">` : 'No lang attribute on <html>.')
+
+  // Mixed content: one http:// SUBRESOURCE on an https:// page breaks the padlock and the browser
+  // blocks the resource outright. Only meaningful when the page itself was served over https.
+  //
+  // Subresources only — things the browser fetches to build the page. An `<a href="http://…">` is an
+  // ordinary outbound link: not blocked, not mixed content, and flagging it would be a false alarm.
+  // So `href` counts on <link> but never on <a>.
+  if (res.url && res.url.startsWith('https://')) {
+    const SUBRESOURCE_ATTRS = {
+      link: ['href'],
+      script: ['src'],
+      img: ['src', 'srcset'],
+      iframe: ['src'],
+      source: ['src', 'srcset'],
+      video: ['src', 'poster'],
+      audio: ['src'],
+      embed: ['src'],
+      object: ['data'],
+      track: ['src'],
+      input: ['src'],
+      form: ['action']
+    }
+    const insecure = new Set()
+    for (const tag of html.match(/<[a-zA-Z][a-zA-Z0-9-]*\b[^>]*>/g) ?? []) {
+      const name = tag.match(/^<([a-zA-Z][a-zA-Z0-9-]*)/)?.[1]?.toLowerCase()
+      for (const a of SUBRESOURCE_ATTRS[name] ?? []) {
+        const val = attr(tag, a)
+        if (!val) continue
+        // srcset holds a comma-separated candidate list: "a.png 1x, b.png 2x"
+        for (const part of a === 'srcset' ? val.split(',') : [val]) {
+          const url = part.trim().split(/\s+/)[0]
+          if (/^http:\/\//i.test(url)) insecure.add(url)
+        }
+      }
+    }
+    const sorted = [...insecure].sort()
+    if (sorted.length) {
+      add(`page[${page}].mixedcontent`, 'robots_hygiene', 11, 'fail',
+        `${sorted.length} insecure subresource(s) on an HTTPS page: ${sorted.slice(0, 3).join(', ')}` +
+        (sorted.length > 3 ? ` (+${sorted.length - 3} more)` : '') +
+        '. Browsers block these and the padlock breaks.')
+    } else {
+      add(`page[${page}].mixedcontent`, 'robots_hygiene', 11, 'pass', 'No mixed content.')
+    }
+  }
 
   // exactly one h1
   const h1Count = countMatches(html, /<h1\b[^>]*>/gi)

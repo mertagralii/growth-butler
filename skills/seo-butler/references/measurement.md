@@ -39,33 +39,49 @@ Schema.org *required-field* depth beyond `@type` is still a judgement call — m
 This layer is the floor. Even with no internet and no Chrome, `--root` still produces a real verdict.
 
 ### Layer 2 — Lighthouse (Google's own auditor)
-Four scores: **Performance, SEO, Accessibility, Best Practices**. Two ways to get them:
 
-**Live URL → PageSpeed Insights API (preferred).** One request returns **both** the Lighthouse lab result
-**and** CrUX field data, and needs no local browser:
+**Primary: `lighthouse_audit` from the bundled chrome-devtools MCP.** Runs locally against a real
+Chrome — **no API key, no daily quota** — and works on localhost as well as a live URL:
+```
+lighthouse_audit(device: "mobile", mode: "navigation")
+```
+- Use `device: "mobile"` first — Google indexes mobile-first. Add desktop only if it's relevant.
+- Returns **Accessibility, Best Practices, SEO, and Agentic Browsing**.
+- **It does not return a Performance score** — that is Layer 2b below, and the two must not be
+  conflated in the report. Saying "Lighthouse 100" when performance was never measured is exactly the
+  kind of blended number `scorecard.md` forbids.
+- **Agentic Browsing** is Lighthouse's newest category: how well an AI agent can navigate and
+  understand the page. It is the closest thing to an *authoritative* GEO signal, and it comes from
+  Google. Report it alongside the others; it is evidence, not a checklist item.
+
+### Layer 2b — Performance, measured (not guessed)
+
+`performance_start_trace(reload: true, autoStop: true)` records a real load and returns **observed
+LCP and CLS** with an LCP breakdown (TTFB / render delay), plus named insights — `LCPBreakdown`,
+`RenderBlocking`, `FontDisplay`, `NetworkDependencyTree`, `DOMSize`, `ThirdParties`, `ForcedReflow`,
+`Cache` — several with estimated metric savings. It also pulls **CrUX field data** for the URL when
+Google has any, and says so honestly when it doesn't.
+
+Judge the numbers against the thresholds in `standards.md` (LCP/INP/CLS, plus TTFB/FCP/TBT).
+
+**Do not paste the raw trace into the report or the conversation.** Each call returns a long
+call-tree and network-request format specification along with the data; copying that around burns
+context for no benefit. Read the summary, then use `performance_analyze_insight(insightName)` to ask
+a targeted question — *"which LCP phase was worst"*, *"which third parties cost the most"* — and
+report only the answer.
+
+### Layer 2c — PageSpeed Insights API (fallback)
+
+Only when there is a public URL but no local Chrome (so `lighthouse_audit` can't run):
 ```
 https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=<encoded-url>&strategy=mobile
 ```
-- **Recommend a free API key up front, before the first call — don't wait to be refused.** The keyless
-  quota is per-day and small: in the field it was exhausted across two commands on the same day, so
-  Lighthouse never got measured at all. Keyless is fine for a one-off; **for anything repeated it is
-  unreliable and you should say so plainly** rather than letting the user discover it as a silent gap.
-  The key is free (Google Cloud Console → enable *PageSpeed Insights API* → create an API key) and
-  goes in the environment as `PAGESPEED_API_KEY`, appended as `&key=<key>`. **Never write it to
-  `state.json`, never print it, never commit it.**
-- If a call fails for quota or rate-limit reasons — HTTP 429, or a 403/400 whose body says
-  *"Quota exceeded … Queries per day"* — treat both the same way: **produce no score**, record the
-  reason in `measurements.unavailable`, and tell the user a free key removes the limit. Never
-  estimate a Lighthouse number to fill the hole.
-- Use `strategy=mobile` first — Google indexes mobile-first. Add `desktop` only if it's relevant.
-- Only works for **publicly reachable** URLs (no localhost, no auth walls).
-
-**Local URL → Lighthouse CLI via the bundled Chromium.** For a dev server before deploy:
-```
-npx lighthouse <url> --output=json --quiet --chrome-flags="--headless"
-```
-If it can't find a browser, point `CHROME_PATH` at the Chromium that ships with the bundled Playwright
-MCP. If that still fails, **skip this layer and say so** — don't spend the run fighting it.
+The keyless quota is per-day and small — in the field it was exhausted across two commands in one
+day. A free key removes the limit (Google Cloud Console → enable *PageSpeed Insights API* → create a
+key), goes in the environment as `PAGESPEED_API_KEY`, appended as `&key=<key>`, and is **never
+written to `state.json`, printed, or committed.** On quota or rate-limit failure — HTTP 429, or a
+403/400 saying *"Quota exceeded … Queries per day"* — **produce no score**, record the reason in
+`measurements.unavailable`, and move on. Never estimate a Lighthouse number to fill the hole.
 
 **Which pages:** the home page plus 2–3 pages that matter (a key landing page, a representative content
 page). Auditing every route is slow and adds little; say which pages you measured.

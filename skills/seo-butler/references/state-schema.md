@@ -14,9 +14,9 @@ in a team repo), that's their call — ask once, record the answer, don't ask ag
 **Everything the butler writes goes under `.seo-butler/`** — screenshots, exports, downloaded CSVs,
 scratch files, reports. The user's project root is theirs; leaving files there is rude and they end
 up in `git status` as noise the user has to triage. Use `.seo-butler/tmp/` for anything transient and
-delete it when the run ends. If a tool insists on writing to the working directory anyway (the
-Playwright MCP creates its own `.playwright-mcp/` for snapshots and screenshots), **say so at the end
-of the run and offer to add it to `.gitignore`** rather than leaving the user to discover it.
+delete it when the run ends. If a bundled tool insists on writing to the working directory anyway,
+**say so at the end of the run and offer to add it to `.gitignore`** rather than leaving the user to
+discover it later in `git status`.
 
 **Migration from v1.x:** if `./.growth-butler/state.json` exists (from the growth-butler era), read it
 as the baseline and write forward to `.seo-butler/`, then tell the user the old folder can be deleted.

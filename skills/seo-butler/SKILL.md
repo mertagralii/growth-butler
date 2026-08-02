@@ -151,7 +151,7 @@ verification pass; everything about *what* happens at each step lives here, in o
    code-side + dashboard-side items with one-line rationales; approve/edit/reject.
 4. **Apply (safely)** — do the `safety.md` git-aware backup first; implement per stack, idempotently;
    dashboard items always prepare the code side first, then automate in a **signed-in** browser
-   session — in-Chrome tools if present, since the bundled Playwright starts from a fresh profile
+   session — in-Chrome tools if present, since the bundled chrome-devtools browser starts from a fresh profile
    every run and cannot hold a Google login; fallback: exact manual guide + pasteable artifacts.
    Then **verify** (build/lint + the `scripts/` validators) and roll back anything that regressed.
 4b. **Optional strategy phase** — only if the user approved it in the plan. Run `strategy.md` (keyword

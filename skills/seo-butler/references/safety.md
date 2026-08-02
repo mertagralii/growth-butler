@@ -37,7 +37,7 @@ Run this check after the plan is approved, before touching any file:
   CSV exports, scratch output, reports — belongs under `.seo-butler/` (transient work in
   `.seo-butler/tmp/`, cleaned up at the end). Files dropped in the root show up in the user's
   `git status` as noise they have to triage. When a bundled tool writes to the working directory on
-  its own (e.g. Playwright MCP's `.playwright-mcp/`), name it in the final report and offer to
+  its own (e.g. the chrome-devtools MCP's own scratch dir), name it in the final report and offer to
   `.gitignore` it — don't leave the user to find it later.
 
 ## Who verifies (centralize it)

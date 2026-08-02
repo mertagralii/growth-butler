@@ -50,14 +50,14 @@ Fetch the raw HTML and inspect the **response text**, not the source file:
   absent on pages that should rank.
 - **Title / meta description**: unique per page, within the budgets in `standards.md`.
 
-## Layer 3 — Browser (Playwright) — what only a real browser reveals
+## Layer 3 — Browser (chrome-devtools) — what only a real browser reveals
 - **JS-rendered content**: is the key content in the DOM after hydration? (SPA/GEO gap — see `geo.md` Tier 1.)
 - **Analytics actually fires**: observe the outgoing GA4/measurement request on a real page load. A tag in
   the HTML is not proof it runs.
 - **Real load behavior**: LCP-ish timing, layout shift, obvious console errors (thresholds in `standards.md`).
 - Capture a screenshot for the record.
 
-Use the bundled Playwright MCP. Keep it to the key pages — this is verification, not a crawl.
+Use the bundled chrome-devtools MCP. Keep it to the key pages — this is verification, not a crawl.
 
 ## Reporting & the fix loop (the user chose: report **and** offer to fix)
 Split every finding into two buckets, because they're fixed in different places:
@@ -75,5 +75,5 @@ so "95" can never be mistaken for "live and working" (see `scorecard.md`).
 
 ## Honesty
 - If you cannot reach the site (DNS, auth wall, 403), say so and stop — never infer a pass.
-- If Playwright isn't available, run Layers 1–2 and state clearly that the browser layer was skipped.
+- if chrome-devtools isn't available, run Layers 1–2 and state clearly that the browser layer was skipped.
 - Report exactly which checks ran, which passed, and which couldn't be performed.

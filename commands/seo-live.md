@@ -33,7 +33,7 @@ centralized in the orchestrator (see `safety.md`).
    - **Rendered HTML** — JSON-LD present as literal `application/ld+json` in the raw response *and*
      parsing as valid JSON; canonical values; internal links pointing at the canonical variant;
      `<meta name="robots">` on the right pages; unique titles/descriptions.
-   - **Browser (Playwright)** — JS-rendered content visible, analytics request actually firing, load
+   - **Browser (chrome-devtools)** — JS-rendered content visible, analytics request actually firing, load
      behavior and console errors, screenshot for the record.
 
 3. **Measure with real tools** — follow `measurement.md`. Now that a public URL exists, get independent
@@ -65,6 +65,6 @@ centralized in the orchestrator (see `safety.md`).
 ## Rules
 - Reply in the user's language.
 - **The loop stays open until live is clean.** Don't declare success with findings outstanding.
-- If the site is unreachable, or Playwright isn't available, say exactly what you could and couldn't
+- If the site is unreachable, or chrome-devtools isn't available, say exactly what you could and couldn't
   check. Never infer a pass.
 - Nothing in the repo is evidence here. Only what you fetched counts.

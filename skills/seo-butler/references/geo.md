@@ -15,7 +15,11 @@ leaves visibility on the table. But GEO is **earned by content and crawlability*
 If AI bots can't fetch or render the page, nothing else matters.
 - **Do NOT block AI crawlers in robots.txt** (unless the user explicitly wants to opt out of AI).
   The citation-driving bots: `GPTBot` (ChatGPT), `OAI-SearchBot`, `ClaudeBot` (Claude),
-  `PerplexityBot` (Perplexity), `Google-Extended` (Google AI), `Bingbot` (Copilot).
+  `PerplexityBot` (Perplexity), `Google-Extended` (Google AI), `Bingbot` (Copilot),
+  `GoogleOther` (Google's separate non-Search crawler — AI Overviews eligibility),
+  `Bytespider` (ByteDance), `CCBot` (Common Crawl — a large share of models train and retrieve from it).
+  The last three are the most commonly missed, usually because a catch-all `User-agent: *` block
+  sweeps them up without anyone intending to.
 - **Server-side render the important content.** Client-only SPA content that needs JS to appear is
   often invisible to AI crawlers → flag SPAs and recommend SSR/SSG/prerender for key pages.
 - No key content locked behind logins, paywalls, cookie walls, or interaction.
@@ -30,6 +34,13 @@ AI engines extract quotable, self-contained answers.
 - **One topic per section**, clear h1→h2→h3 hierarchy, exactly one `<h1>` per page.
 - **Scannable formats:** short paragraphs, bullet/numbered lists, comparison tables, definition
   sentences ("X is a …"). These are the shapes engines quote cleanly.
+- **Listicle structure — check for it concretely.** "Scannable" is a feeling; this is the testable
+  version. A page qualifies if it has at least one of: **numbered headings** (`<h2>1. …`), a **"Top N"
+  / "N best" / "N ways" title pattern**, an **ordered list** (`<ol>`) carrying real content rather
+  than navigation, or a **comparison table**. Engines lift these near-verbatim because the boundaries
+  between items are unambiguous. Where a page *is* a list, mark it up as `ItemList` too (`standards.md`).
+  Where it isn't, **don't force it** — a listicle shell around prose that isn't a list is worse than
+  plain prose, for readers and engines alike.
 - **FAQ blocks** for pages with common questions (pair with FAQPage schema — see standards.md).
 
 ### Tier 3 — Evidence & authority (citation boosters)

@@ -16,13 +16,18 @@ Statuses: `done` · `partial` · `skipped` (user chose to skip) · `todo` · `n/
 7. **Open Graph tags** — og:title, og:description, og:image, og:url, og:type.
 8. **Twitter Card tags** — summary_large_image with image.
 9. **Structured data (JSON-LD)** — at minimum Organization + WebSite; add per-page types
-   (Article/Product/FAQ/BreadcrumbList/LocalBusiness) where the content justifies it.
+   (Article/Product/FAQ/ItemList/BreadcrumbList/LocalBusiness) where the content justifies it, and
+   **stack them** where the content earns it (a listicle with a Q&A section is legitimately
+   `Article` + `ItemList` + `FAQPage`). Never add a type the visible content doesn't back.
 10. **Favicon + web manifest + theme-color** — basic app/meta presence.
 11. **Meta robots / noindex hygiene** — no accidental `noindex` on pages that should rank; staging
-    or thin pages correctly excluded.
+    or thin pages correctly excluded. Also **no mixed content**: on an HTTPS page every subresource
+    must be HTTPS (one `http://` asset breaks the padlock and gets blocked).
 12. **Clean, descriptive URLs** — flag obviously bad patterns (query-string-only, IDs) as a note.
-13. **Broken links** — internal links resolve to real routes/files (fix in-plan when the target is
-    unambiguous, else report); external links checked best-effort and **report-only** (never auto-fixed).
+13. **Broken links & redirect chains** — internal links resolve to real routes/files (fix in-plan when
+    the target is unambiguous, else report); external links checked best-effort and **report-only**
+    (never auto-fixed). Also **at most one redirect hop**: `A → B → C` wastes crawl budget and, when
+    the chain ends at an error page, reads to Google as a **soft 404**.
 14. **Edge/CDN robots override** — if the site is live, fetch `https://<site>/robots.txt` and compare it
     with what the code serves. A difference means a CDN/WAF is shadowing the origin — see `cdn-layer.md`.
     Fixed in the provider's dashboard, not the repo. `n/a` if the site isn't live yet.
@@ -34,11 +39,14 @@ Statuses: `done` · `partial` · `skipped` (user chose to skip) · `todo` · `n/
 
 ## B. GEO & On-page content — `seo-geo-content`  (see `geo.md` for the full GEO playbook + honest tiers)
 17. **AI crawlability** — robots.txt allows citation bots (GPTBot, OAI-SearchBot, ClaudeBot,
-    PerplexityBot, Google-Extended, Bingbot); key content is server-rendered (flag SPA gaps);
-    nothing important behind login/paywall. **(Tier 1 — highest impact.)**
+    PerplexityBot, Google-Extended, Bingbot, GoogleOther, Bytespider, CCBot); key content is
+    server-rendered (flag SPA gaps); nothing important behind login/paywall. **(Tier 1 — highest impact.)**
 18. **Answer-first structure** — key pages/sections answer their core question in the first ~2
-    sentences; question-based headings ("What is X?"); one clear h1; scannable lists/tables. **(Tier 2.)**
-19. **Semantic HTML** — correct h1–h3 hierarchy, landmarks, one h1 per page.
+    sentences; question-based headings ("What is X?"); one clear h1; scannable lists/tables. Where a
+    page really is a list, check for **listicle structure** concretely (numbered headings, "Top N"
+    pattern, a content `<ol>`, or a comparison table) — never force it onto prose. **(Tier 2.)**
+19. **Semantic HTML** — correct h1–h3 hierarchy with **no skipped levels** (`h1 → h3` breaks the
+    outline), landmarks, one h1 per page.
 20. **AI-answer readiness** — definitional sentences + FAQ blocks where genuinely useful.
 21. **Content suggestions (evidence & freshness)** — concrete, per-page recommendations surfaced in
     the report, not auto-written: add real statistics/quotes/cited sources (measured citation

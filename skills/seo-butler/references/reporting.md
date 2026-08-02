@@ -35,7 +35,7 @@ landed — too early to read. Check back around <date>."* Never manufacture a tr
    credits**, API-based. Most robust, and works without a browser. Try this first whenever OpenSEO is
    connected, regardless of the user's `providerChoice` for keyword data.
 2. **The user's signed-in Search Console in a browser** — realistically this means Claude's in-Chrome
-   tools; the bundled Playwright starts from a fresh profile each run and won't be signed into Google.
+   tools; the bundled chrome-devtools browser starts from a fresh profile each run and won't be signed into Google.
    **Prefer the Performance page's CSV export button over scraping the UI**: the export is a stable
    contract, the SPA's DOM is not. Download, then read the file.
 3. **Neither available** → record it as skipped **with the reason** and report only what you *can*

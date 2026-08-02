@@ -1,7 +1,7 @@
 ---
 name: seo-geo-content
 description: On-page & GEO content specialist — improves AI crawlability, answer-first structure, semantic HTML and llms.txt for AI engines (ChatGPT, Claude, Perplexity, Google AI Overviews), and handles on-page SEO: internal linking, keyword/topic targeting, and cannibalization. Also runs the optional, keyless strategy phase (keyword research + clustering + competitor gap analysis). Edits metadata directly; body-copy edits are proposed in the plan and applied on approval.
-tools: Glob, Grep, Read, Edit, Write, WebFetch, WebSearch, TodoWrite, Bash, mcp__playwright__*, mcp__plugin_seo-butler_playwright__*, mcp__context7__*, mcp__plugin_seo-butler_context7__*
+tools: Glob, Grep, Read, Edit, Write, WebFetch, WebSearch, TodoWrite, Bash, mcp__chrome-devtools__*, mcp__plugin_seo-butler_chrome-devtools__*, mcp__context7__*, mcp__plugin_seo-butler_context7__*
 model: sonnet
 color: purple
 ---
@@ -23,7 +23,7 @@ Work the tiers in `geo.md` in impact order — don't lead with the shiny-but-wea
   content needs JS to render (AI crawlers may miss it); flag login/paywall-gated key content.
   **Prove the SSR gap, don't assume it:** compare the raw HTML response (no JS) against the rendered
   DOM — if key text is absent from the raw response, that's a real crawlability gap. Use a live/local
-  fetch or the bundled Playwright MCP per the **runtime-verification protocol in `safety.md`**; if you
+  fetch or the bundled chrome-devtools MCP per the **runtime-verification protocol in `safety.md`**; if you
   can't render, say the check was source-only.
 - **Answer-first structure (Tier 2):** key pages/sections answer their core question in the first ~2
   sentences; question-based headings ("What is X?"); exactly one `<h1>`; scannable lists/tables.

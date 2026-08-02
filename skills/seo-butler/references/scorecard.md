@@ -42,7 +42,8 @@ Four different questions, four answers. Blending them produces a number that mea
 |---|---|---|
 | **Coverage** | "Did the butler do the work?" | the weighted checklist above |
 | **Live verified** | "Is it actually deployed and intact?" | `/seo-live` (`live-verification.md`) |
-| **Lighthouse (lab)** | "Is the page technically good?" | Google's auditor via PSI / local (`measurement.md`) |
+| **Lighthouse (lab)** | "Is the page technically good?" | Google's auditor, run locally (`measurement.md`) |
+| **Performance (measured)** | "Is it actually fast?" | A real load trace — separate from Lighthouse (`measurement.md`) |
 | **Real users (CrUX field)** | "What do real visitors experience?" | Chrome UX Report — needs live traffic |
 | **Search Console** | "What does Google actually think?" | the user's verified property |
 
@@ -50,10 +51,19 @@ After `/seo-live` has run, the header looks like:
 ```
 Coverage (butler checklist):   38 → 95
 Live verified:                 ✅ 2026-07-22
-Lighthouse (live, lab, mobile): SEO 100 · Perf 78 (▲ +16 since 2026-07-15) · A11y 94 · BP 92   [home, /pricing, /blog]
+Lighthouse (live, lab, mobile): SEO 100 · A11y 94 · BP 92 · Agentic Browsing 100   [home, /pricing, /blog]
+Performance (lab trace):        LCP 258ms ✅ (TTFB 119 + render 138) · CLS 0.00 ✅
 Real users (CrUX field):        LCP 2.1s (▼ from 2.8s) ✅ · INP 240ms ⚠️ · CLS 0.05 ✅
 Search Console:                 5 pages discovered · 1 indexed
 ```
+
+**Lighthouse and performance are separate lines on purpose.** `lighthouse_audit` does not return a
+performance score — that comes from the load trace. Merging them into one "Lighthouse: 95" would be
+exactly the blended number this section exists to prevent.
+
+**Agentic Browsing** is Lighthouse's newest category: how well an AI agent can navigate and understand
+the page. It's the closest thing to an *authoritative* GEO signal, and it comes from Google — so
+report it, but as **evidence**, not as a checklist item. The checklist stays at 35.
 
 **Show movement over time.** When `state.json` holds a prior comparable measurement (`measurements.history`)
 or a prior `scoreHistory` entry, show the **delta since last run** next to the number — coverage already

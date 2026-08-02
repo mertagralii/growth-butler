@@ -2,7 +2,7 @@
 
 The butler has two live-knowledge tools so specialists can stay current instead of relying on
 stale training data. Use them deliberately — targeted lookups, not open-ended browsing. (The plugin also
-bundles other MCPs — Playwright for rendering, and the optional OpenSEO data layer — covered elsewhere.)
+bundles other MCPs — chrome-devtools for rendering, Lighthouse and performance tracing, and the optional OpenSEO data layer — covered elsewhere.)
 
 ## Two sources, two jobs
 
