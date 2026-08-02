@@ -28,8 +28,16 @@ Statuses: `done` · `partial` · `skipped` (user chose to skip) · `todo` · `n/
     the target is unambiguous, else report); external links checked best-effort and **report-only**
     (never auto-fixed). Also **at most one redirect hop**: `A → B → C` wastes crawl budget and, when
     the chain ends at an error page, reads to Google as a **soft 404**.
-14. **Edge/CDN robots override** — if the site is live, fetch `https://<site>/robots.txt` and compare it
+    **On a live site this is machine-checked, not judged** — `validate-artifacts.mjs --url` crawls
+    outward from your pages *and the sitemap*. Two things make source-reading insufficient: framework
+    link helpers resolve against routing only at render time, and the pages that break most often
+    (login, register, password reset) are `noindex` → not in the sitemap → never fetched unless the
+    crawl follows links to them. **Scope the check to reachable pages, not to indexable ones.**
+14. **Edge/CDN override** — if the site is live, fetch `https://<site>/robots.txt` and compare it
     with what the code serves. A difference means a CDN/WAF is shadowing the origin — see `cdn-layer.md`.
+    **Not just robots.txt:** the edge also rewrites the HTML body (Cloudflare Email Obfuscation turns
+    `mailto:` into a 404-ing `/cdn-cgi/` link, Rocket Loader defers scripts, Auto Minify edits markup).
+    Same rule, wider surface: the repo can be perfectly correct while the crawler gets something broken.
     Fixed in the provider's dashboard, not the repo. `n/a` if the site isn't live yet.
 15. **Canonical ↔ internal-link consistency** — in the **rendered** HTML, do internal links point at the
     canonical variant? Frameworks with several routes bound to one handler can emit the wrong one, so the
@@ -46,7 +54,10 @@ Statuses: `done` · `partial` · `skipped` (user chose to skip) · `todo` · `n/
     page really is a list, check for **listicle structure** concretely (numbered headings, "Top N"
     pattern, a content `<ol>`, or a comparison table) — never force it onto prose. **(Tier 2.)**
 19. **Semantic HTML** — correct h1–h3 hierarchy with **no skipped levels** (`h1 → h3` breaks the
-    outline), landmarks, one h1 per page.
+    outline), landmarks, one h1 per page. Machine-checked by `validate-artifacts.mjs` on every page it
+    audits — **verify with it rather than by eye.** Heading *level* and heading *size* are styled
+    independently, so a skip is invisible on screen and survives a run that believed it fixed the
+    headings; it is the visible-looking item that most often gets marked `done` while still failing.
 20. **AI-answer readiness** — definitional sentences + FAQ blocks where genuinely useful.
 21. **Content suggestions (evidence & freshness)** — concrete, per-page recommendations surfaced in
     the report, not auto-written: add real statistics/quotes/cited sources (measured citation

@@ -59,6 +59,12 @@ Fetch the raw HTML and inspect the **response text**, not the source file:
 
 Use the bundled chrome-devtools MCP. Keep it to the key pages — this is verification, not a crawl.
 
+**One deliberate exception: link integrity.** "Key pages only" is right for the browser layer and wrong
+for item 13 — broken links live on the pages nobody nominates as key (auth, legal, help), and those are
+exactly the ones a `noindex`-aware, sitemap-driven page list leaves out. Run
+`validate-artifacts.mjs --url` so the link crawl reaches them; it is cheap (HEAD requests, bounded by
+`--max-links`) and needs no browser.
+
 ## Reporting & the fix loop (the user chose: report **and** offer to fix)
 Split every finding into two buckets, because they're fixed in different places:
 - **Code-side** (template output, canonical, redirects, missing artifacts) → run the normal butler flow:

@@ -16,10 +16,24 @@ robots.txt · sitemap.xml · titles · meta descriptions · canonical · hreflan
 Twitter cards · JSON-LD structured data · favicon/manifest/theme-color · robots hygiene · URL quality ·
 **broken links** · **edge/CDN robots override** · **canonical↔link consistency** · **stale public files**.
 
-**Broken links (item 13):** verify internal links resolve to real routes/files/anchors (from the
-route map / file tree, or live responses). Fix in-plan only when the correct target is unambiguous;
-otherwise report with the source location. External links: best-effort check, **report-only** — never
-auto-edit or remove them (flaky, and outages aren't the user's fault). See `standards.md`.
+**Broken links (item 13):** when the site is live, **run the crawl — do not eyeball this**:
+
+```
+node ${CLAUDE_PLUGIN_ROOT}/scripts/validate-artifacts.mjs --url https://<site> --pages /,<key pages>
+```
+
+It seeds from your pages **plus the sitemap**, follows internal links outward (default depth 2), and
+reports every 4xx/5xx target with the pages linking to it, plus redirect chains over one hop. Reading
+the source instead is how this item gets missed: a Razor/Blade/Django tag helper resolving against
+attribute routing looks correct in the template and 404s in the rendered HTML, and the pages that break
+most often (login, register, password reset) are `noindex`, so they are absent from the sitemap and a
+sitemap-only check never fetches them. Report `links.coverage` honestly — if the cap was hit, coverage
+was partial. Fix in-plan only when the correct target is unambiguous; otherwise report with the source
+location. External links: best-effort, **report-only** — never auto-edit or remove them (flaky, and
+outages aren't the user's fault). See `standards.md`.
+
+**A broken link the repo did not write:** if the target sits under `/cdn-cgi/`, the edge injected it —
+see `cdn-layer.md`. Don't send the user hunting through source that is already correct.
 
 **Edge/CDN robots override (item 14):** if the site is already live, fetch its `robots.txt` and compare
 with what the code serves. A difference means a CDN/WAF is shadowing the origin — the repo is fine, the

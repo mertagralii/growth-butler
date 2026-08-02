@@ -2,15 +2,18 @@
 /**
  * validate-artifacts.mjs - deterministic checks on the SEO artifacts the butler produces.
  *
- * This is the layer that must be true regardless of what any model believes. Two of the checks
+ * This is the layer that must be true regardless of what any model believes. Three of the checks
  * here exist because a build passed and static file reads looked fine while the deployed site was
  * broken anyway:
  *
  *   - a template engine HTML-encoded the JSON-LD script type, shipping `application/ld&#x2B;json`,
  *     which no parser recognises;
- *   - sitemap.xml shipped with a UTF-8 BOM, which makes strict XML parsers reject the whole file.
+ *   - sitemap.xml shipped with a UTF-8 BOM, which makes strict XML parsers reject the whole file;
+ *   - a link crawl found 404s on pages a sitemap-driven audit never fetched, because the pages that
+ *     accumulate broken links (login, register, password reset) are noindex and therefore not listed.
  *
- * Neither is visible unless you look at the raw bytes of the response. That is what this does.
+ * None is visible unless you look at the raw bytes of the response — and the third is not visible
+ * unless you follow the links outward. That is what this does.
  *
  * Usage:
  *   node scripts/validate-artifacts.mjs --url https://example.com
@@ -58,6 +61,9 @@ validate-artifacts.mjs - deterministic SEO artifact checks
   --root <dir>       project root, for checking files as they exist in the repo
   --public <dir>     public/static dir inside --root (auto-detected if omitted)
   --pages <list>     comma-separated paths to check (default: /)
+  --max-links <n>    cap on internal URLs the link crawl visits (default 150)
+  --link-depth <n>   how many hops out from the seed pages to follow (default 2)
+  --no-links         skip the link-integrity crawl entirely
   --json             machine-readable output
   --strict           exit 1 when any check fails
   --help             this message
@@ -65,24 +71,36 @@ validate-artifacts.mjs - deterministic SEO artifact checks
 At least one of --url or --root is required. Passing both also diffs the repo's robots.txt
 against the live one, which is how an edge/CDN override gets caught.
 
+The link crawl starts from --pages plus every URL in the sitemap, and follows internal links
+outward. That is deliberate: the pages that break most often (login, register, password reset)
+are noindex, so they are absent from the sitemap and invisible to a sitemap-only check.
+
 Git Bash on Windows rewrites arguments that start with "/" into Windows paths, so --pages /,/about
 arrives mangled. Prefix the command with MSYS_NO_PATHCONV=1, or use PowerShell/cmd, where it works
 as written.
 `.trim()
 
 function parseArgs (argv) {
-  const args = { url: null, root: null, public: null, pages: ['/'], json: false, strict: false, help: false }
+  const args = {
+    url: null, root: null, public: null, pages: ['/'], json: false, strict: false, help: false,
+    links: true, maxLinks: 150, linkDepth: 2
+  }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--json') args.json = true
     else if (a === '--strict') args.strict = true
     else if (a === '--help' || a === '-h') args.help = true
+    else if (a === '--no-links') args.links = false
     else if (a === '--url') args.url = argv[++i]
     else if (a === '--root') args.root = argv[++i]
     else if (a === '--public') args.public = argv[++i]
     else if (a === '--pages') args.pages = argv[++i].split(',').map(s => s.trim()).filter(Boolean)
+    else if (a === '--max-links') args.maxLinks = Number(argv[++i])
+    else if (a === '--link-depth') args.linkDepth = Number(argv[++i])
     else throw new Error(`Unknown argument: ${a}`)
   }
+  if (!Number.isFinite(args.maxLinks) || args.maxLinks < 1) throw new Error('--max-links must be a positive number')
+  if (!Number.isFinite(args.linkDepth) || args.linkDepth < 0) throw new Error('--link-depth must be 0 or greater')
   return args
 }
 
@@ -91,12 +109,74 @@ function parseArgs (argv) {
 /** Fetch raw bytes + decoded text. Never throws; failures come back as a result object. */
 async function fetchRaw (url) {
   try {
-    const res = await fetch(url, { redirect: 'follow', headers: { 'user-agent': 'seo-butler/2.0 (+validate-artifacts)' } })
+    const res = await fetch(url, { redirect: 'follow', headers: { 'user-agent': 'seo-butler/2.1 (+validate-artifacts)' } })
     const buf = Buffer.from(await res.arrayBuffer())
     return { ok: res.ok, status: res.status, bytes: buf, text: buf.toString('utf8'), url: res.url }
   } catch (err) {
     return { ok: false, status: 0, bytes: null, text: null, error: String(err.message ?? err) }
   }
+}
+
+/**
+ * One request, HEAD first because it is cheap, GET when the server rejects the method. Plenty of
+ * stacks answer HEAD with 405/501/403 while the page itself is fine, and calling that a broken link
+ * would be a false alarm.
+ */
+async function probe (url) {
+  for (const method of ['HEAD', 'GET']) {
+    try {
+      const res = await fetch(url, {
+        method,
+        redirect: 'manual',
+        headers: { 'user-agent': 'seo-butler/2.1 (+validate-artifacts)' }
+      })
+      if (method === 'HEAD' && [403, 405, 501].includes(res.status)) continue
+      return res
+    } catch (err) {
+      if (method === 'GET') return { networkError: String(err.message ?? err) }
+    }
+  }
+  return { networkError: 'no response' }
+}
+
+/**
+ * Status probe that follows redirects *manually* so the hop count survives. `redirect: 'follow'`
+ * hides the chain, and the chain is half the finding: `A -> B -> C` wastes crawl budget, and a
+ * redirect that lands on an error page is what Google reads as a soft 404.
+ */
+async function fetchStatus (url, maxHops = 5) {
+  const chain = []
+  let current = url
+
+  for (let hop = 0; hop <= maxHops; hop++) {
+    const res = await probe(current)
+    if (res.networkError) return { ok: false, status: 0, error: res.networkError, url: current, chain }
+
+    const location = res.status >= 300 && res.status < 400 ? res.headers.get('location') : null
+    if (!location) return { ok: res.ok, status: res.status, url: current, chain }
+
+    chain.push({ from: current, status: res.status })
+    try {
+      current = new URL(location, current).toString()
+    } catch {
+      return { ok: false, status: res.status, error: `unparseable Location: ${location}`, url: current, chain }
+    }
+  }
+  return { ok: false, status: 0, error: `more than ${maxHops} redirects`, url: current, chain }
+}
+
+/** Bounded-concurrency map. Keeps the crawl polite without serialising it. */
+async function mapPool (items, limit, fn) {
+  const results = new Array(items.length)
+  let cursor = 0
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const idx = cursor++
+      results[idx] = await fn(items[idx])
+    }
+  })
+  await Promise.all(workers)
+  return results
 }
 
 function readLocal (path) {
@@ -436,6 +516,153 @@ function checkJsonLd (add, page, html) {
   }
 }
 
+// ---------------------------------------------------------------- link integrity (item 13)
+
+/** Schemes that are not navigable URLs, plus in-page anchors. None of these can be "broken". */
+const NON_NAVIGABLE = /^(mailto:|tel:|sms:|javascript:|data:|blob:|ftp:|#)/i
+
+function extractHrefs (html) {
+  const out = []
+  for (const tag of html.match(/<a\b[^>]*>/gi) ?? []) {
+    const href = attr(tag, 'href')
+    if (href && href.trim()) out.push(href.trim())
+  }
+  return out
+}
+
+/** Resolve `href` against `base`, drop the fragment. Returns null for anything not worth fetching. */
+function absolutize (href, base) {
+  if (NON_NAVIGABLE.test(href)) return null
+  try {
+    const u = new URL(href, base)
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return null
+    u.hash = ''
+    return u.toString()
+  } catch {
+    return null
+  }
+}
+
+function shortenUrl (url, origin) {
+  return url.startsWith(origin) ? (url.slice(origin.length) || '/') : url
+}
+
+/**
+ * Breadth-first internal link check.
+ *
+ * This exists because the per-page audit only proves that *the pages it was handed* are alive. It
+ * says nothing about the links inside them, and the pages that break most often — login, register,
+ * password reset — are `noindex`, so they are not in the sitemap and a sitemap-driven check never
+ * looks at them. Following links outward is the only way those get seen.
+ */
+async function checkLinks (add, origin, seeds, { maxLinks, linkDepth }) {
+  let baseOrigin
+  try {
+    baseOrigin = new URL(origin).origin
+  } catch {
+    return
+  }
+
+  const visited = new Map()            // absolute url -> status result
+  const referrers = new Map()          // absolute url -> Set of pages that link to it
+  let frontier = [...new Set(seeds.map(s => absolutize(s, origin)).filter(Boolean))]
+  const enqueued = new Set(frontier)
+  let dropped = 0
+
+  for (let depth = 0; depth <= linkDepth && frontier.length; depth++) {
+    const room = maxLinks - visited.size
+    if (room <= 0) {
+      dropped += frontier.length
+      break
+    }
+    if (frontier.length > room) {
+      dropped += frontier.length - room
+      frontier = frontier.slice(0, room)
+    }
+
+    const isLeaf = depth === linkDepth
+    const next = []
+
+    const batch = await mapPool(frontier, 6, async url =>
+      isLeaf ? { url, res: await fetchStatus(url) } : { url, res: await fetchRaw(url) })
+
+    for (const { url, res } of batch) {
+      visited.set(url, res)
+      if (isLeaf || !res.ok || !res.text) continue
+      if (!/^\s*<(!doctype|html)/i.test(res.text.slice(0, 200).trim())) continue
+
+      for (const href of extractHrefs(res.text)) {
+        const abs = absolutize(href, res.url || url)
+        if (!abs || new URL(abs).origin !== baseOrigin) continue
+        if (!referrers.has(abs)) referrers.set(abs, new Set())
+        referrers.get(abs).add(shortenUrl(url, baseOrigin))
+        if (!enqueued.has(abs)) {
+          enqueued.add(abs)
+          next.push(abs)
+        }
+      }
+    }
+    frontier = next
+  }
+
+  // Sorted so two runs on an unchanged site produce byte-identical output.
+  const entries = [...visited.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+  const broken = entries.filter(([, r]) => r.status >= 400 && r.status < 600)
+  const unreachable = entries.filter(([, r]) => r.status === 0)
+  const chains = entries.filter(([, r]) => (r.chain?.length ?? 0) > 1)
+
+  for (const [url, res] of broken) {
+    const path = shortenUrl(url, baseOrigin)
+    const from = [...(referrers.get(url) ?? [])].sort()
+    const linkedFrom = from.length
+      ? `Linked from ${from.length} page(s): ${from.slice(0, 5).join(', ')}${from.length > 5 ? ` (+${from.length - 5} more)` : ''}.`
+      : 'Reached from the sitemap or the requested page list, not from a link.'
+
+    // Cloudflare's Email Obfuscation rewrites every `mailto:` into this path at the edge and restores
+    // it with JavaScript on click. The repo is not wrong — the markup the crawler receives is. Saying
+    // "fix your link" here would send the user hunting through source that is already correct.
+    if (/\/cdn-cgi\/l\/email-protection/i.test(url)) {
+      add(`links.broken[${path}]`, 'broken_links', 13, 'fail',
+        `HTTP ${res.status}. This is Cloudflare Email Obfuscation (Scrape Shield), not a link you wrote: ` +
+        'it replaces `mailto:` hrefs with this path and restores them via JavaScript. Crawlers without JS ' +
+        'get a 404 and never see the address, so your contact email is invisible to search and AI bots ' +
+        `(checklist item 35). The switch is in the Cloudflare dashboard, not the repo. ${linkedFrom}`)
+      continue
+    }
+
+    add(`links.broken[${path}]`, 'broken_links', 13, 'fail',
+      `HTTP ${res.status}${res.error ? ` - ${res.error}` : ''}. ${linkedFrom}`)
+  }
+
+  for (const [url, res] of unreachable) {
+    add(`links.unreachable[${shortenUrl(url, baseOrigin)}]`, 'broken_links', 13, 'warn',
+      `No response (${res.error ?? 'unknown'}). Could be the target or could be this machine's network - ` +
+      'not counted as broken.')
+  }
+
+  for (const [url, res] of chains) {
+    const hops = res.chain.map(h => h.status).join(' -> ')
+    add(`links.redirect-chain[${shortenUrl(url, baseOrigin)}]`, 'broken_links', 13, 'warn',
+      `${res.chain.length} redirect hops (${hops}) before HTTP ${res.status}. checklist.md item 13 allows ` +
+      'one hop; each extra hop wastes crawl budget, and a chain ending on an error page reads as a soft 404.')
+  }
+
+  if (broken.length === 0) {
+    add('links.broken', 'broken_links', 13, 'pass',
+      `${visited.size} internal URL(s) checked, none broken.`)
+  }
+
+  // No silent caps: if the crawl stopped short, the report says so rather than implying full coverage.
+  add('links.coverage', null, null, 'info',
+    `Link crawl: ${visited.size} internal URL(s) visited, depth ${linkDepth}, cap ${maxLinks}.` +
+    (dropped > 0
+      ? ` ${dropped} queued URL(s) NOT checked - the cap was hit. Raise --max-links for full coverage.`
+      : ' Cap not reached.') +
+    ' External links are not checked here (report-only per checklist item 13). Redirect chains are ' +
+    'counted only at the outermost depth, where links are probed rather than followed - a chain on a ' +
+    'page the crawl descended through will not be reported.')
+}
+
 function checkPage (add, page, res) {
   if (!res.ok) {
     add(`page[${page}].reachable`, 'broken_links', 13, 'fail',
@@ -582,6 +809,27 @@ function checkPage (add, page, res) {
       h1Count === 0 ? 'No <h1>.' : `${h1Count} <h1> elements; there should be one.`)
   }
 
+  // Heading order: descending one level at a time. A jump like h2 -> h5 breaks the document outline,
+  // and it is invisible on screen because heading level and visual size are styled independently —
+  // which is exactly why it survives a run that "fixed the headings" and gets caught by an auditor.
+  const levels = [...html.matchAll(/<h([1-6])\b[^>]*>/gi)].map(m => Number(m[1]))
+  if (levels.length === 0) {
+    add(`page[${page}].heading-order`, 'semantic_html', 19, 'warn', 'No headings at all on the page.')
+  } else {
+    const skips = []
+    for (let i = 1; i < levels.length; i++) {
+      if (levels[i] > levels[i - 1] + 1) skips.push(`h${levels[i - 1]} -> h${levels[i]}`)
+    }
+    if (skips.length) {
+      add(`page[${page}].heading-order`, 'semantic_html', 19, 'warn',
+        `${skips.length} skipped heading level(s): ${[...new Set(skips)].sort().join(', ')}. ` +
+        `Order on the page: ${levels.map(l => `h${l}`).join(' ')}.`)
+    } else {
+      add(`page[${page}].heading-order`, 'semantic_html', 19, 'pass',
+        `${levels.length} heading(s), no skipped levels.`)
+    }
+  }
+
   checkJsonLd(add, page, html)
 }
 
@@ -639,6 +887,20 @@ async function run (args) {
     for (const page of args.pages) {
       const path = page.startsWith('/') ? page : `/${page}`
       checkPage(add, path, await fetchRaw(`${origin}${path}`))
+    }
+
+    if (args.links) {
+      // Seed from the requested pages AND the sitemap. The sitemap alone is not enough (noindex pages
+      // are deliberately absent from it), and the requested pages alone are not enough (they are
+      // usually just "/"), so the union is what gives the crawl somewhere real to start.
+      const sitemapLocs = live.sitemap?.ok
+        ? [...stripBom(live.sitemap.text).matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map(m => m[1])
+        : []
+      const seeds = [
+        ...args.pages.map(p => `${origin}${p.startsWith('/') ? p : `/${p}`}`),
+        ...sitemapLocs
+      ]
+      await checkLinks(add, origin, seeds, { maxLinks: args.maxLinks, linkDepth: args.linkDepth })
     }
   }
 
