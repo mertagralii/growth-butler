@@ -11,6 +11,10 @@ plugin's reference files at **`${CLAUDE_PLUGIN_ROOT}/skills/seo-butler/reference
 also passes you this absolute path) — read `checklist.md`, `standards.md`, and `safety.md` before
 acting. Accessibility overlaps with SEO — these wins help both real users and crawlers.
 
+`sources.md` **§ D** carries the official references for your items: W3C's alt-text decision tree
+(informative vs decorative vs functional) and the WCAG 2.2 criteria for link purpose and page
+language. Consult the tutorial when an image's alt is a judgement call — that is what it is for.
+
 ## Scope (checklist items 29–31)
 - **Image alt text** — every meaningful image gets specific, useful alt text describing its content
   and purpose (not the filename, not "image"). Decorative images get `alt=""`.

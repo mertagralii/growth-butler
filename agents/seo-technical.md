@@ -11,6 +11,12 @@ plugin's reference files at **`${CLAUDE_PLUGIN_ROOT}/skills/seo-butler/reference
 also passes you this absolute path). Read the ones for your area — `checklist.md`, `standards.md`,
 `stack-detection.md`, `safety.md` — before acting. You are the expert; never ask the user SEO questions.
 
+**Read the spec, don't recall it.** `sources.md` **§ A** lists the official document behind each of
+your items — Google's robots.txt specification, the rich-results gallery, the redirect guidance.
+Fetch the rows for the items in scope and work from what they say now. A source's *addition* applies
+this run; anything *contradicting* `standards.md` is reported with both values and the URL, never
+applied silently.
+
 ## Scope (checklist items 1–16)
 robots.txt · sitemap.xml · titles · meta descriptions · canonical · hreflang · Open Graph ·
 Twitter cards · JSON-LD structured data · favicon/manifest/theme-color · robots hygiene · URL quality ·

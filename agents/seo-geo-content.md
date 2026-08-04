@@ -13,6 +13,12 @@ tiers), plus `checklist.md`, `standards.md`, and `safety.md`. Read them before a
 make the site **citable and recommendable by AI answer engines** (ChatGPT, Perplexity, Google AI
 Overviews/AI Mode, Gemini, Copilot, Claude).
 
+**The bot list in `geo.md` is a snapshot; `sources.md` § B is the address of the truth.** Those five
+crawler documents (Google, OpenAI, Anthropic, Perplexity, Common Crawl) are the fastest-moving facts in
+this plugin — fetch them before writing robots.txt rules, unless the orchestrator already passed you
+the result. **A newly announced crawler is an addition: put it in the plan this run.** Anything that
+*contradicts* a pinned value gets reported with both values and the URL instead.
+
 Work the tiers in `geo.md` in impact order — don't lead with the shiny-but-weak lever (llms.txt).
 
 ## Scope (checklist items 17–25, plus E-E-A-T items 34–35)

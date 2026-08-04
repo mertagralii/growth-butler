@@ -3,6 +3,12 @@
 The defaults the butler applies. When a choice arises, use these instead of asking the user. Values
 reflect 2026 reality. GEO-specific guidance lives in `geo.md`.
 
+> **These are pinned copies of other people's rules.** `sources.md` holds the official document behind
+> each one — fetch it for the items in scope and work from what it says now. What's written here is the
+> offline fallback and the tie-breaker: when a source *contradicts* a value below, the value below
+> still governs the run and the disagreement is reported. Section markers throughout point at the
+> relevant registry section.
+
 ## Titles (`<title>`)
 - **Length:** aim 50–60 characters; hard cap ~60 (Google truncates ~600px, roughly 60 chars). Unique per page.
 - **Pattern:** `Primary Topic — Brand` on inner pages; `Brand — Value Proposition` on the home page.
@@ -44,6 +50,10 @@ reflect 2026 reality. GEO-specific guidance lives in `geo.md`.
   (AI Overviews eligibility), `Bytespider` is ByteDance's, and `CCBot` feeds Common Crawl, which a
   large share of models train and retrieve from.
 
+> **Source: `sources.md` § A** (robots.txt spec) **and § B** (the five crawler documents). This bot
+> list is the fastest-moving fact in this file — a name added upstream is an *addition*, so it goes
+> into the plan this run rather than waiting for a release.
+
 ## sitemap.xml
 - Include only indexable, canonical, 200-status URLs (exclude noindex, redirects, auth-gated, canonicalized-away).
 - Valid XML; accurate `<lastmod>` from real content/file dates; split into a sitemap index if >50k URLs or >50MB.
@@ -54,6 +64,10 @@ reflect 2026 reality. GEO-specific guidance lives in `geo.md`.
   home/landing, `article` for posts), `og:image` (absolute URL, **1200×630**, <5MB), `og:site_name`, `og:locale`.
 - Twitter: `twitter:card = summary_large_image`, plus title/description/image.
 - **Generate a missing OG image (don't just flag it)** — see the method below.
+
+> **Source: `sources.md` § A** for Open Graph (ogp.me). **X/Twitter cards have no reachable official
+> documentation** — every developer path now 404s or lands on a generic overview page, so the card
+> values above are the authority until X restores its docs. Don't go looking; the registry records why.
 
 ### Rendering an OG image (1200×630)
 
@@ -102,7 +116,12 @@ fabricate ratings, prices, authors, or reviews (Google penalizes this; it also b
   and `contentUrl`/`embedUrl`. Don't add it for decorative background clips.
 - **Event** for real events with a date/venue: `name`, `startDate`, `location` (or `VirtualLocation`),
   and `eventStatus`/`eventAttendanceMode` where known. Never fabricate dates or venues.
-- Validate mentally against schema.org required/recommended fields; prefer completeness on recommended fields.
+- Validate against schema.org required/recommended fields; prefer completeness on recommended fields.
+
+> **Source: `sources.md` § A** — the rich-results gallery is the only authority on which types still
+> earn a rich result and what each one requires. Google has narrowed this before (FAQ and HowTo both
+> lost general eligibility in 2023); a type quietly leaving the gallery is a *contradiction*, so
+> report it rather than dropping the markup.
 - **Only assert what's genuinely on the page.** These richer types unlock rich results only when the
   visible content backs them — mismatched/absent content is a Google manual-action risk, not a win.
 
@@ -140,6 +159,9 @@ fabricate) what's missing.
   that screen readers and AI extractors both walk. Headings convey *structure*, not size — if a
   heading looks too big, fix it in CSS, never by jumping a level.
 
+> **Source: `sources.md` § D** — W3C's alt-text decision tree settles the informative/decorative/
+> functional calls this section compresses into two lines.
+
 ## Performance — Core Web Vitals (2026 thresholds)
 Google measures at the **75th percentile of real users (CrUX)**. "Good" targets:
 - **LCP (loading)** — ≤ **2.5 s** (poor > 4.0 s). Usually the hero image or web font.
@@ -154,6 +176,10 @@ Supporting metrics — not Core Web Vitals themselves, but the trace reports the
   do on the front end; it points at hosting, database, or missing caching, not at the markup.
 - **FCP (first paint)** — ≤ **1.8 s** (poor > 3.0 s).
 - **TBT (total blocking time)** — ≤ **200 ms** (poor > 600 ms). The lab stand-in for INP.
+
+> **Source: `sources.md` § C.** Which metrics *are* Core Web Vitals is itself versioned — FID was one
+> until INP replaced it in March 2024. Check web.dev before judging a metric, and report a moved
+> threshold rather than silently adopting it.
 
 **Apply automatically (safe):** explicit `width`/`height` (or aspect-ratio) on images to kill CLS;
 `loading="lazy"` below the fold; `fetchpriority="high"` + preload on the LCP image; `preconnect`/

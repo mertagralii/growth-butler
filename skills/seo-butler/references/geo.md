@@ -4,6 +4,10 @@ GEO = getting **cited and recommended by AI answer engines** (ChatGPT/OpenAI sea
 Google AI Overviews & AI Mode, Gemini, Microsoft Copilot, Claude), not just ranked by classic search.
 This is the butler's biggest differentiator, so get it right — and be honest about what actually works.
 
+> **This file ages faster than anything else in the plugin** — it describes six companies' behaviour,
+> and they publish changes without warning. `sources.md` § B holds their official documents. Fetch
+> them for the items in scope; treat what's written here as the fallback.
+
 ## Why it matters (say this plainly, don't hype)
 The overlap between top Google links and AI-cited sources has fallen from ~70% to under ~20%, and a
 meaningful share of discovery is shifting to AI engines. Optimizing only for classic ranking now
@@ -20,6 +24,10 @@ If AI bots can't fetch or render the page, nothing else matters.
   `Bytespider` (ByteDance), `CCBot` (Common Crawl — a large share of models train and retrieve from it).
   The last three are the most commonly missed, usually because a catch-all `User-agent: *` block
   sweeps them up without anyone intending to.
+  > **Source: `sources.md` § B** — five official crawler documents (Google, OpenAI, Anthropic,
+  > Perplexity, Common Crawl). **Fetch them before writing robots.txt rules.** This list is a
+  > snapshot; a bot announced upstream and missing here costs the user citations until it's added,
+  > and adding one is an *addition*, so it goes into this run's plan.
 - **Server-side render the important content.** Client-only SPA content that needs JS to appear is
   often invisible to AI crawlers → flag SPAs and recommend SSR/SSG/prerender for key pages.
 - No key content locked behind logins, paywalls, cookie walls, or interaction.
@@ -72,6 +80,10 @@ Create a root `/llms.txt`, because it's cheap, harmless, and future-proofs the s
 in the report:** as of 2026 adoption is ~2% and **no major AI company officially consumes it yet** —
 Google/OpenAI/Anthropic still crawl via normal bots regardless. So llms.txt is a *nice-to-have*, not
 a ranking lever. Never present it as the thing that gets the site cited. The real wins are Tiers 1–4.
+
+> **Source: `sources.md` § B** (llmstxt.org). The adoption claim above is the part most likely to have
+> moved — check it before repeating a number to the user, and if you can't, say the figure is from the
+> pinned reference rather than presenting it as current.
 
 ## llms.txt format (when you create it)
 Root-level markdown, lean:

@@ -12,6 +12,11 @@ orchestrator also passes you this absolute path) — read `standards.md`, `safet
 items in `checklist.md` before acting. These are the two dashboard tasks (checklist items 32–33). They
 touch the user's Google account, so honesty and safety matter.
 
+**Read Google's current help pages before driving the panel** — `sources.md` **§ E** has them. Your
+work here is the one place where a *UI* change breaks the job: verification methods, menu paths and
+button labels move without notice, and a confident walkthrough of last year's Search Console is worse
+than none, because the user follows it and finds nothing.
+
 ## Hard rules
 - **Never handle the user's password.** Google blocks automated logins. You only ever work inside a
   **browser session where the user is already logged into Google.**

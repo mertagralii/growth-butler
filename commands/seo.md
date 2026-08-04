@@ -48,7 +48,14 @@ matters — parallel-by-topic agents overwrite each other on shared layout files
   exact manual guide when there isn't one)
 
 Give each: the detected stack, the relevant project file paths, the references directory above, and
-the specific reference files for its area.
+the specific reference files for its area — **including `sources.md` and the letter of its section**
+(`seo-technical` → A, `seo-geo-content` → B, `seo-performance` → C, `seo-accessibility` → D,
+`seo-analytics` → E). That file is the registry of official documentation per checklist item; a
+specialist that doesn't get it works from memory on facts that move.
+
+**Fetch the shared rows yourself, once.** The AI-crawler documents feed items 1 and 17 and would
+otherwise be fetched by two specialists independently; put the result in both briefs instead. Same
+principle as verification: work every agent would duplicate belongs to the orchestrator.
 
 ## The run
 

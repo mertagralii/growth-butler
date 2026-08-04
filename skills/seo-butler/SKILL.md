@@ -47,6 +47,8 @@ first, too — items already `done` are settled and shouldn't be re-audited from
 
 - `references/checklist.md` — the fixed, complete audit checklist (the menu behind every plan).
 - `references/standards.md` — best-practice values and how to decide each item like an expert.
+- `references/sources.md` — the **canonical source registry**: which official document settles each
+  checklist item. Read the spec before working an item instead of recalling it.
 - `references/geo.md` — the GEO playbook: the honest, tiered guide to being cited by AI engines.
 - `references/stack-detection.md` — how to detect the stack and the right method for each.
 - `references/state-schema.md` — schema + rules for `.seo-butler/state.json` (the memory).
@@ -79,13 +81,19 @@ first, too — items already `done` are settled and shouldn't be re-audited from
 
 ## Live knowledge (stay current, don't guess)
 
-For staying current, use two live-knowledge tools deliberately (see `research.md`):
-- **context7** — confirm the *current, version-correct* way to implement stack-specific SEO code
+Three layers, three different questions (see `research.md`). Keep them apart:
+- **`references/sources.md` — *what is the rule?*** The registry of official documentation, one row
+  per checklist item: Google's robots.txt spec, the rich-results gallery, the AI-crawler lists,
+  web.dev's Core Web Vitals. **Fetch the row for an item before working it.** The pinned values in
+  `standards.md`/`geo.md` are the offline fallback, not the first stop.
+- **context7 — *how do I write it in this framework?*** The *current, version-correct* implementation
   (metadata API, sitemap/robots generation, analytics tag). Prefer this over guessing a framework API.
-- **WebSearch / WebFetch** — verify fast-moving facts (metric thresholds, AI-crawler names, schema
-  requirements) when they materially affect the work.
-Targeted lookups only; verify volatile claims across sources; cache within a run; fall back to the
-pinned references if a source is unreachable.
+- **WebSearch / WebFetch — anything the registry doesn't cover.** The fallback for fast-moving facts
+  with no row, corroborated across sources. Never a shortcut past a row that exists.
+
+Targeted lookups only; cache within a run; fall back to the pinned references if a source is
+unreachable — and **say which source you couldn't reach**. A source's addition (a new AI crawler)
+applies this run; anything **contradicting** a pinned value is reported, not applied (`sources.md`).
 
 For the **optional strategy phase**, a real keyword/competitor **data layer** can be connected —
 **OpenSEO** (bundled, recommended) or **DataForSEO** — for real search volume, difficulty, and
@@ -158,6 +166,9 @@ verification pass; everything about *what* happens at each step lives here, in o
 
 1. **Discover** — read state; detect stack; map pages, existing metadata, and what the site is about.
 2. **Decide** — checklist × findings; dispatch specialists in parallel to audit; skip valid `done` items.
+   Item scope is settled here, so this is where `sources.md` earns its keep: fetch the official docs
+   for the items actually in scope — the shared rows (the AI-crawler lists above all) **once, by you**,
+   passed down in the briefs, so five specialists don't fetch the same page five times.
 3. **Plan** — present the plan per `plan.md`: **impact-ranked**, led by a **Top 3 wins** block, then
    code-side + dashboard-side items with one-line rationales; approve/edit/reject.
 4. **Apply (safely)** — do the `safety.md` git-aware backup first; implement per stack, idempotently;

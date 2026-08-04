@@ -277,8 +277,27 @@ maddeleri paydadan düşürür ve kalanı 100'e normalize eder — elde yapılan
 **Performans da tahmin değil, ölçüm.** Chrome DevTools trace'i gerçek LCP/CLS ve nedenlerini veriyor —
 *"bu görsel muhtemelen LCP'indir"* değil, *"LCP 258 ms, 138 ms'i render gecikmesi"*.
 
+## Kuralı hatırlamaz, okur
+
+SEO kuralları başkalarının ürünlerine ait ve haber vermeden değişiyor. Bu yüzden plugin, checklist'in
+her maddesi için **resmi dokümanın adresini** taşıyor (`references/sources.md`): Google'ın robots.txt
+spesifikasyonu, rich-results galerisi, web.dev'in Core Web Vitals sayfaları, ve OpenAI/Anthropic/
+Perplexity/Google/Common Crawl'ın kendi crawler dokümanları. Uzman ajan o maddenin işine başlamadan
+önce ilgili dokümanı çeker ve **bugün ne yazdığıyla** çalışır.
+
+Ne kadar gerekli olduğunu kaydı kurarken ölçtük: adresleri doğrularken, bir modelin hafızadan
+yazacağı **beş adres çoktan taşınmıştı** — Google tarama dokümanlarını ayrı bir bölüme aldı, OpenAI
+geliştirici sitesini taşıdı, Anthropic desteği yeni bir alan adına geçirdi. Hepsi bugün hâlâ
+yönlendirmeyle açılıyor; yönlendirmeler sonsuza kadar yaşamıyor.
+
+İki kural bunu güvenli tutuyor: kaynağın **eklediği** şey (yeni çıkan bir AI crawler) o koşuda plana
+girer; sabit bir değeri **çürüten** şey uygulanmaz, iki değer ve kaynak URL'siyle rapora yazılır. Tek
+bir yanlış okuma senin siteni değiştirmesin diye.
+
 ## Dürüstlük kapıları
 
+- **Kural hatırlanmaz, okunur.** Oynak değerlerin arkasında resmi doküman adresi var; ulaşılamayan
+  kaynak sebebiyle bildirilir, "doğrulandı" sayılmaz.
 - **Uydurma yok.** Ölçülemeyen şey sebebiyle birlikte "ölçülemedi" yazılır, tahminle doldurulmaz.
 - **Uygulandı ≠ yayında.** Deploy edilmemiş iş sıfır etki eder; her koşu bunu açıkça söyler.
 - **Kullanıcının şifresi asla istenmez.** Google otomatik girişleri engeller; sen bir kez giriş yaparsın.
@@ -313,7 +332,7 @@ okunur ve geçmişin kaybolmadan `.seo-butler/`'a taşınır.
 
 ## Durum
 
-**v2.2.0.** Dört komut da gerçek bir projede (ASP.NET Core MVC, canlı site) uçtan uca çalıştırıldı ve
+**v2.3.0.** Dört komut da gerçek bir projede (ASP.NET Core MVC, canlı site) uçtan uca çalıştırıldı ve
 dürüstlük kapılarını geçti: skor bağımsız doğrulamayla birebir eşleşti, `/seo-report` veri yetersizken
 trend üretmeyi reddetti, `/seo` kendi skorunu yükseltebilecekken *"dürüst olmaz"* diyerek bırakmadı.
 
@@ -323,9 +342,11 @@ Kök neden yapısaldı — kağıt üzerinde var olan ama arkasında mekanik kon
 "model kaynağa bakar" seviyesine düşüyordu. v2.1.1 o kontrolleri yazdı, v2.2.0 ise
 `/seo-verify` ile dış denetimi kalıcı hale getirdi. Bu README'deki bütün bulgular ölçüm, iddia değil.
 
-**v2.1.0'daki yenilikler henüz tam bir koşuda denenmedi** — Playwright'tan chrome-devtools'a geçiş,
-ölçülen performans, yeni kontroller. Araçlar tek tek doğrulandı (1200×630 ekran görüntüsü, Lighthouse,
-trace) ama uçtan uca koşu bekliyor. Sıfırdan bir projede ilk koşu da hiç test edilmedi.
+**v2.3.0'daki yenilik henüz tam bir koşuda denenmedi** — kanonik kaynak kaydı. 35 URL'in tamamı
+çekilip çözüldüğü ve kayıtlı olduğu bilgiyi gerçekten taşıdığı doğrulandı, dikişler testle korunuyor;
+ama canlı bir `/seo` koşusunda bir uzmanın kaynağı okuyup ona göre iş yapması henüz izlenmedi.
+v2.1.0 işi de aynı durumda (Playwright'tan chrome-devtools'a geçiş, ölçülen performans) — araçlar tek
+tek doğrulandı ama uçtan uca koşu bekliyor. Sıfırdan bir projede ilk koşu da hiç test edilmedi.
 
 Bu README mevcut durumun dürüst özeti, bir vaat değil.
 
@@ -614,8 +635,27 @@ arithmetic.
 **Performance is measured too, not guessed.** A Chrome DevTools trace gives real LCP/CLS and the
 reason behind them — not *"that image is probably your LCP"* but *"LCP 258 ms, 138 ms of it render delay"*.
 
+## It reads the rule instead of recalling it
+
+SEO rules belong to other people's products and change without notice. So the plugin carries the
+**address of the official document** behind every checklist item (`references/sources.md`): Google's
+robots.txt specification, the rich-results gallery, web.dev's Core Web Vitals pages, and the crawler
+documentation published by OpenAI, Anthropic, Perplexity, Google and Common Crawl. A specialist fetches
+the relevant document before working an item and goes by **what it says today**.
+
+How necessary that is got measured while building the registry: verifying the addresses, **five of the
+URLs a model would write from memory had already moved** — Google split its crawling docs into a
+separate section, OpenAI moved its developer site, Anthropic moved support to a new domain. All five
+still resolve through redirects, and redirects don't live forever.
+
+Two rules keep it safe: what a source **adds** (a newly announced AI crawler) goes into this run's
+plan; anything that **contradicts** a pinned value is not applied — it's reported with both values and
+the source URL. One misread page should never rewrite your site.
+
 ## Honesty gates
 
+- **Rules are read, not recalled.** Volatile values carry the address of their official document; a
+  source that can't be reached is reported with the reason, never counted as confirmed.
 - **No fabrication.** Anything unmeasured is reported as unmeasured, with the reason — never estimated.
 - **Applied is not live.** Work that isn't deployed has zero effect, and every run says so.
 - **Your password is never requested.** Google blocks automated logins; you sign in once yourself.
@@ -651,15 +691,23 @@ first run reads it and carries your history forward into `.seo-butler/` without 
 
 ## Status
 
-**v2.1.0.** All four commands have been run end to end on a real project (ASP.NET Core MVC, live site)
+**v2.3.0.** All four commands have been run end to end on a real project (ASP.NET Core MVC, live site)
 and held their honesty gates: the score matched an independent verification exactly, `/seo-report`
 refused to produce a trend on insufficient data, and `/seo` declined to raise its own score when the
 item wasn't genuinely done.
 
-**What's new in v2.1.0 hasn't been through a full run yet** — the Playwright → chrome-devtools swap,
-measured performance, the new checks. The tools were each verified individually (1200×630 screenshot,
-Lighthouse, trace) but an end-to-end run is still pending. A first run on a fresh project has never
-been tested either.
+Then that same site was audited from the outside and **contradicted the plugin's own 98/100**: a
+404-ing link on three pages, a dead contact link on five, and a skipped heading level inside an item
+marked `done`. The root cause was structural — an item that existed on paper but had no mechanical
+check behind it quietly degraded to "the model will look at the source". v2.1.1 wrote those checks;
+v2.2.0 made outside auditing permanent with `/seo-verify`. Every finding in this README is a
+measurement, not a claim.
+
+**What's new in v2.3.0 hasn't been through a full run yet** — the canonical source registry. All 35 of
+its URLs were fetched and confirmed to resolve and carry the fact they're registered for, and the
+seams are covered by tests, but no live `/seo` run has yet exercised a specialist reading a source and
+acting on it. The v2.1.0 work (Playwright → chrome-devtools, measured performance) is in the same
+position, and a first run on a fresh project has never been tested either.
 
 This README is an honest summary of the current state, not a promise.
 

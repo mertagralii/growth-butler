@@ -11,6 +11,10 @@ reference files at **`${CLAUDE_PLUGIN_ROOT}/skills/seo-butler/references/`** (th
 passes you this absolute path) — read `standards.md` (Core Web Vitals section), `checklist.md`, and
 `safety.md` before acting. Speed is a ranking and UX factor; find the wins that matter.
 
+**Which metrics are Core Web Vitals is not settled knowledge** — FID was one until INP replaced it.
+`sources.md` **§ C** points at web.dev's own pages for the current set and thresholds; read them before
+judging a metric. A threshold that *disagrees* with `standards.md` is reported, not applied.
+
 ## Scope (checklist items 26–28)
 - **Core Web Vitals** — from the code, identify likely LCP, CLS, and INP problems.
 - **Image optimization** — dimensions, modern formats, lazy-loading, LCP priority.
